@@ -121,12 +121,6 @@ def tag_mp3_with_discogs(filepath: str, release):
         if released:
             id3.add(TDOR(encoding=3, text=str(released)))
 
-        print(f"✅ Tagged basic metadata for {filepath} " + released)
-    except Exception as e:
-        print(f"❌ Error tagging basic metadata: {e}")
-
-    # --- Extended / custom tags ---
-    try:
         # Labels / publisher
         labels = [l.name if not isinstance(l, dict) else l.get("name", "Unknown")
                   for l in getattr(release, "labels", [])]
@@ -176,7 +170,7 @@ def tag_mp3_with_discogs(filepath: str, release):
                     print(f"⚠️ Could not fetch cover art: {e}")
 
         id3.save(v2_version=3)
-        print(f"✅ Saved all ID3v2 tags for {filepath}")
+        print(f"✅ Saved tags for {filepath}")
 
     except Exception as e:
-        print(f"❌ Error adding extended tags: {e}")
+        print(f"❌ Error tagging: {e}")

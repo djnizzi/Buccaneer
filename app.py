@@ -73,7 +73,7 @@ def download_playlist(playlist_url: str) -> list:
                     print(f"⚠️ Failed to process {entry.get('title')}: {e}")
                 release = search_discogs_with_prompt(safe_title)
                 if release:
-                    tag_mp3_with_discogs(f"{final_path}.mp3", release)
+                    tag_mp3_with_discogs(final_path, release)
                 else:
                     print("No release selected. Skipping Discogs tagging.")
             else:
