@@ -204,3 +204,9 @@ def safe_filename(name: str, replacement: str = "") -> str:
     # Forbidden characters in Windows + macOS
     forbidden = r'[\\/:*?"<>|]'
     return re.sub(forbidden, replacement, name).strip()
+
+def flip_query(query: str) -> str:
+    """Turn 'Artist - Title' into 'Title - Artist' if pattern matches."""
+    if " - " in query:
+        left, right = query.split(" - ", 1)
+        return f"{right.strip()} - {left.strip()}"

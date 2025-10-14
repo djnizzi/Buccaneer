@@ -119,10 +119,10 @@ def search_discogs(query: str, max_results: int = 15, top_n: int = 5):
             choice = int(choice)
             if 0 <= choice <= min(top_n, len(scored)):
                 break
-        print("Invalid input, try again.")
+        print("⚠️ Invalid input, try again.")
 
     if choice == 0:
-        print("Skipped.")
+        print("⏭️ Skipping Discogs tagging.")
         return None
 
     selected_release = scored[choice - 1][2]
