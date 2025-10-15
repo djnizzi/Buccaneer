@@ -12,7 +12,7 @@ config.read('secrets.ini')
 GENIUS_TOKEN = config['API']['genius_key']
 
 # Init Genius client
-genius = lyricsgenius.Genius(GENIUS_TOKEN)
+genius = lyricsgenius.Genius(GENIUS_TOKEN, verbose=False)
 genius.skip_non_songs = True
 genius.remove_section_headers = True
 
@@ -90,13 +90,13 @@ def choose_song(matches, query: str, min_score: int = 50, auto_threshold: int = 
     if not filtered:
         # show best score for debugging
         best = scored[0][0] if scored else 0
-        print(f"⏭️ Skipping '{query}': best score {best:.1f}% (below {min_score}%)")
+        print(f"⏭️ Skipping")
         return "skip", None
 
     best_score, best_song = filtered[0]
 
     if best_score >= auto_threshold:
-        print(f"🤖 Auto-selected: {best_song.get('title')} - {best_song.get('primary_artist',{}).get('name')} ({best_score:.1f}%)")
+        print("🤖", end = "")
         return "auto", best_song
 
     # Manual needed: return filtered candidates (score, song)
@@ -132,9 +132,9 @@ def tag_with_lyrics(filepath: str, lyrics: str):
     tags.add(USLT(encoding=3, lang="eng", desc="", text=lyrics))
     tags.save(filepath)
     if lyrics != "Instrumental":
-        print(f"✅ Tagged lyrics into {os.path.basename(filepath)}")
+        print(f"✅ Tagged {os.path.basename(filepath)}")
     else:
-        print(f"✅ Tagged 'Instrumental' into {os.path.basename(filepath)}")
+        print(f"✅ Tagged {os.path.basename(filepath)} as Instrumenal")
 
 def genius_tagger(folder: str):
     """Main function to process all MP3s in a folder. Manual prompts deferred to the end."""
@@ -152,7 +152,7 @@ def genius_tagger(folder: str):
             print(f"🎵 Skipping {base}, already has lyrics.")
             continue
 
-        print(f"\n🔍 Searching lyrics for: {base}")
+        print("🔍", end = "")
         results = search_genius(base)   # search_genius flips internally
         decision, data = choose_song(results, base)
 
@@ -160,7 +160,7 @@ def genius_tagger(folder: str):
         if decision != "auto":
             alt_query = flip_query(keep_main(flip_query(base)))
             if alt_query != base:
-                print(f"↩️ Retrying search with stripped query: {alt_query}")
+                print("↩️", end = "")
                 results = search_genius(alt_query)
                 decision, data = choose_song(results, alt_query)
 
