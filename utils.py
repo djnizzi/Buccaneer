@@ -212,6 +212,7 @@ def flip_query(query: str) -> str:
         return f"{right.strip()} - {left.strip()}"
 
 def keep_main(title: str) -> str:
-    title = re.sub(r"\b(feat\.?|ft\.).*", "", title, flags=re.IGNORECASE)
+    # Remove "feat. ..." or "ft. ..." outside parentheses
+    title = re.sub(r"\b(?:feat|ft)\b.*", "", title, flags=re.IGNORECASE)
 
-    return title.strip()
+    return " ".join(title.split()).strip()
