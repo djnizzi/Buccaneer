@@ -131,7 +131,10 @@ def tag_with_lyrics(filepath: str, lyrics: str):
 
     tags.add(USLT(encoding=3, lang="eng", desc="", text=lyrics))
     tags.save(filepath)
-    print(f"✅ Tagged lyrics into {os.path.basename(filepath)}")
+    if lyrics != "Instrumental":
+        print(f"✅ Tagged lyrics into {os.path.basename(filepath)}")
+    else:
+        print(f"✅ Tagged 'Instrumental' into {os.path.basename(filepath)}")
 
 def genius_tagger(folder: str):
     """Main function to process all MP3s in a folder. Manual prompts deferred to the end."""
@@ -166,6 +169,8 @@ def genius_tagger(folder: str):
             lyrics = fetch_lyrics(song)
             if lyrics:
                 tag_with_lyrics(file, lyrics)
+            else:
+                tag_with_lyrics(file, "Instrumental")
 
         elif decision == "skip":
             # already printed reason inside choose_song
@@ -185,8 +190,10 @@ def genius_tagger(folder: str):
             for idx, (score, song) in enumerate(scored, 1):
                 print(f"🎧 {idx}. {song.get('title')} - {song.get('primary_artist',{}).get('name')} ({score:.1f}%)")
 
-            choice = input(f"Select a match [1–{len(scored)}] or press Enter to skip: ").strip()
-            if choice.isdigit() and 1 <= int(choice) <= len(scored):
+            choice = input(f"Select a match [1–{len(scored)}], 0 for Instrumental or press Enter to skip: ").strip()
+            if choice == "0":
+                tag_with_lyrics(file, "Instrumental")
+            elif choice.isdigit() and 1 <= int(choice) <= len(scored):
                 song = scored[int(choice) - 1][1]
                 lyrics = fetch_lyrics(song)
                 if lyrics:
