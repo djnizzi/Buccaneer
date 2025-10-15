@@ -210,3 +210,8 @@ def flip_query(query: str) -> str:
     if " - " in query:
         left, right = query.split(" - ", 1)
         return f"{right.strip()} - {left.strip()}"
+
+def keep_main(title: str) -> str:
+    title = re.sub(r"\b(feat\.?|ft\.).*", "", title, flags=re.IGNORECASE)
+
+    return title.strip()

@@ -4,7 +4,7 @@ import configparser
 from mutagen.id3 import ID3, USLT, ID3NoHeaderError
 from rapidfuzz import fuzz
 import lyricsgenius
-from utils import flip_query, strip_feat
+from utils import flip_query, keep_main
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -141,7 +141,6 @@ def genius_tagger(folder: str):
         return
 
     pending = []
-    still_pending = []
 
     for file in mp3_files:
         # use basename without extension as the query
@@ -153,6 +152,14 @@ def genius_tagger(folder: str):
         print(f"\n🔍 Searching lyrics for: {base}")
         results = search_genius(base)   # search_genius flips internally
         decision, data = choose_song(results, base)
+
+        # 🔁 Retry with stripped "feat." if low score (manual trigger)
+        if decision != "auto":
+            alt_query = flip_query(keep_main(flip_query(base)))
+            if alt_query != base:
+                print(f"↩️ Retrying search with stripped query: {alt_query}")
+                results = search_genius(alt_query)
+                decision, data = choose_song(results, alt_query)
 
         if decision == "auto":
             song = data
@@ -168,42 +175,24 @@ def genius_tagger(folder: str):
             # Defer manual review: store file path, display name, and filtered candidates
             pending.append((file, base, data))
 
+    # After loop: prompt user for pending/manual ones
     if pending:
-        for base, file in pending:
-            base = flip_query(strip_feat(flip_query(base)))
-            results = search_genius(base)
-            decision, data = choose_song(results, base)
+        print("\n=== Manual review for ambiguous matches ===")
+    for file, base, scored in pending:
+        if not has_lyrics(file):
+            base = flip_query(base)
+            print(f"\n🔍 Manual review needed for: {base}")
+            for idx, (score, song) in enumerate(scored, 1):
+                print(f"🎧 {idx}. {song.get('title')} - {song.get('primary_artist',{}).get('name')} ({score:.1f}%)")
 
-            if decision == "auto":
-                song = data
+            choice = input(f"Select a match [1–{len(scored)}] or press Enter to skip: ").strip()
+            if choice.isdigit() and 1 <= int(choice) <= len(scored):
+                song = scored[int(choice) - 1][1]
                 lyrics = fetch_lyrics(song)
                 if lyrics:
                     tag_with_lyrics(file, lyrics)
-
-            elif decision == "skip":
-                pass
-
-            elif decision == "manual":
-                # Defer manual review: store file path, display name, and filtered candidates
-                still_pending.append((file, base, data))
-
-    # After loop: prompt user for pending/manual ones
-    if still_pending:
-        print("\n=== Manual review for ambiguous matches ===")
-    for file, base, scored in still_pending:
-        base = flip_query(base)
-        print(f"\n🔍 Manual review needed for: {base}")
-        for idx, (score, song) in enumerate(scored, 1):
-            print(f"🎧 {idx}. {song.get('title')} - {song.get('primary_artist',{}).get('name')} ({score:.1f}%)")
-
-        choice = input(f"Select a match [1–{len(scored)}] or press Enter to skip: ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(scored):
-            song = scored[int(choice) - 1][1]
-            lyrics = fetch_lyrics(song)
-            if lyrics:
-                tag_with_lyrics(file, lyrics)
-        else:
-            print("⏭️ Skipped.")
+            else:
+                print("⏭️ Skipped.")
 
 if __name__ == "__main__":
     folder = input("📂 Enter folder with MP3 files: ").strip()
