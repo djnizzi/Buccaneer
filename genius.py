@@ -4,7 +4,7 @@ import configparser
 from mutagen.id3 import ID3, USLT, ID3NoHeaderError
 from rapidfuzz import fuzz
 import lyricsgenius
-from utils import flip_query
+from utils import flip_query, strip_feat
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -140,11 +140,12 @@ def genius_tagger(folder: str):
         print(f"No mp3s found in {folder}")
         return
 
-    pending = []  # collect manual review cases
+    pending = []
+    still_pending = []
 
     for file in mp3_files:
         # use basename without extension as the query
-        base = os.path.splitext(os.path.basename(file))[0]  # <-- previously bug: used full path!
+        base = os.path.splitext(os.path.basename(file))[0]
         if has_lyrics(file):
             print(f"🎵 Skipping {base}, already has lyrics.")
             continue
@@ -167,10 +168,29 @@ def genius_tagger(folder: str):
             # Defer manual review: store file path, display name, and filtered candidates
             pending.append((file, base, data))
 
-    # After loop: prompt user for pending/manual ones
     if pending:
+        for base, file in pending:
+            base = flip_query(strip_feat(flip_query(base)))
+            results = search_genius(base)
+            decision, data = choose_song(results, base)
+
+            if decision == "auto":
+                song = data
+                lyrics = fetch_lyrics(song)
+                if lyrics:
+                    tag_with_lyrics(file, lyrics)
+
+            elif decision == "skip":
+                pass
+
+            elif decision == "manual":
+                # Defer manual review: store file path, display name, and filtered candidates
+                still_pending.append((file, base, data))
+
+    # After loop: prompt user for pending/manual ones
+    if still_pending:
         print("\n=== Manual review for ambiguous matches ===")
-    for file, base, scored in pending:
+    for file, base, scored in still_pending:
         base = flip_query(base)
         print(f"\n🔍 Manual review needed for: {base}")
         for idx, (score, song) in enumerate(scored, 1):
