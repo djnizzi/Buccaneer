@@ -118,7 +118,7 @@ def clean_title(title: str) -> str:
         "lyrics", "hd", "remastered", "full album", "mv",
         "official lyrics", "official lyric video", "official visualizer",
         "original mix", "extended mix", "letra", "lyric video", "melodic, progressive house",
-        "lyric visualizer", "visualizer", "audio"
+        "lyric visualizer", "visualizer", "audio", "visualiser"
     ]
 
     # Build a single regex pattern
@@ -207,9 +207,12 @@ def safe_filename(name: str, replacement: str = "") -> str:
 
 def flip_query(query: str) -> str:
     """Turn 'Artist - Title' into 'Title - Artist' if pattern matches."""
-    if " - " in query:
-        left, right = query.split(" - ", 1)
-        return f"{right.strip()} - {left.strip()}"
+    if query:
+        if " - " in query:
+            left, right = query.split(" - ", 1)
+            return f"{right.strip()} - {left.strip()}"
+    else:
+        return "Artist - Title"
 
 def keep_main(title: str) -> str:
     # Remove "feat. ..." or "ft. ..." outside parentheses

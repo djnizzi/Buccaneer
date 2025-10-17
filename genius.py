@@ -56,7 +56,7 @@ def search_genius(query: str):
         scored.sort(key=lambda x: x[0], reverse=True)
         return scored
     except Exception as e:
-        print(f"⚠️ Genius search failed for '{query}': {e}")
+        print(f"⛔ Genius search failed for '{query}': {e}")
         return []
 
 def choose_song(matches, query: str, min_score: int = 50, auto_threshold: int = 75):
@@ -90,7 +90,7 @@ def choose_song(matches, query: str, min_score: int = 50, auto_threshold: int = 
     if not filtered:
         # show best score for debugging
         best = scored[0][0] if scored else 0
-        print(f"⏭️ Skipping")
+        print(f"⏭️ Skipping {query}")
         return "skip", None
 
     best_score, best_song = filtered[0]
@@ -114,7 +114,7 @@ def fetch_lyrics(song):
         if lyrics_song:
             return lyrics_song.lyrics
     except Exception as e:
-        print(f"⚠️ Failed to fetch lyrics for {song.get('title')} - {e}")
+        print(f"⛔ Failed to fetch lyrics for {song.get('title')} - {e}")
     return None
 
 def tag_with_lyrics(filepath: str, lyrics: str):
@@ -160,7 +160,7 @@ def genius_tagger(folder: str):
         if decision != "auto":
             alt_query = flip_query(keep_main(flip_query(base)))
             if alt_query != base:
-                print("↩️", end = "")
+                print("🔁", end = "")
                 results = search_genius(alt_query)
                 decision, data = choose_song(results, alt_query)
 
@@ -199,7 +199,7 @@ def genius_tagger(folder: str):
                 if lyrics:
                     tag_with_lyrics(file, lyrics)
             else:
-                print("⏭️ Skipped.")
+                print(f"⏭️ Skipped {base}")
 
 if __name__ == "__main__":
     folder = input("📂 Enter folder with MP3 files: ").strip()
