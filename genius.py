@@ -12,13 +12,47 @@ config.read('secrets.ini')
 GENIUS_TOKEN = config['API']['genius_key']
 
 # Init Genius client
-genius = lyricsgenius.Genius(GENIUS_TOKEN, verbose=False)
+genius = lyricsgenius.Genius(GENIUS_TOKEN, verbose=False, timeout=15)
 genius.skip_non_songs = True
 genius.remove_section_headers = True
 
-def get_mp3_files(folder: str):
-    """Return list of all mp3 files in a folder."""
+MANUAL_FILE = "manual_review.txt"
+
+def get_mp3_files(folder: str, recursive: bool = False):
+    """Return list of all mp3 files in a folder (optionally recursive)."""
+    if recursive:
+        return glob.glob(os.path.join(folder, "**", "*.mp3"), recursive=True)
     return glob.glob(os.path.join(folder, "*.mp3"))
+
+def get_metadata_tags(filepath: str):
+    """
+    Return (title, artist) from ID3 tags.
+    - Title from TIT2
+    - Album Artist (TPE2), unless it's 'VVAA'
+    - If Album Artist == 'VVAA', fallback to Artist (TPE1)
+    """
+    try:
+        tags = ID3(filepath)
+    except ID3NoHeaderError:
+        tags = None
+
+    title, artist = None, None
+    if tags:
+        if "TIT2" in tags:
+            title = str(tags["TIT2"])
+        if "TPE2" in tags:  # Album Artist
+            artist = str(tags["TPE2"])
+        if artist and artist.upper() == "VVAA":
+            if "TPE1" in tags:  # fallback to Artist
+                artist = str(tags["TPE1"])
+
+    # fallback from filename if missing
+    if not title:
+        title = os.path.splitext(os.path.basename(filepath))[0]
+    if not artist:
+        artist = ""
+
+    return title.strip(), artist.strip()
 
 def has_lyrics(filepath: str) -> bool:
     """Check if MP3 already has lyrics tag."""
@@ -138,19 +172,32 @@ def tag_with_lyrics(filepath: str, lyrics: str):
 
 def genius_tagger(folder: str):
     """Main function to process all MP3s in a folder. Manual prompts deferred to the end."""
-    mp3_files = get_mp3_files(folder)
-    if not mp3_files:
-        print(f"No mp3s found in {folder}")
-        return
-
     pending = []
+    recursive = False
+    manual_only = False
+
+    if os.path.isfile(folder) and folder.endswith(".txt"):
+        # Manual pass: read paths from file
+        with open(folder, "r", encoding="utf-8") as f:
+            mp3_files = [line.strip() for line in f if line.strip()]
+        print(f"📜 Loaded {len(mp3_files)} files for manual review.")
+        manual_only = True
+    else:
+        # Normal folder run
+        recursive = "albums" in folder.lower()
+        mp3_files = get_mp3_files(folder, recursive=recursive)
+        print(f"🎵 Found {len(mp3_files)} MP3 files ({'recursive' if recursive else 'flat'} mode).")
 
     for file in mp3_files:
-        # use basename without extension as the query
-        base = os.path.splitext(os.path.basename(file))[0]
         if has_lyrics(file):
-            print(f"🎵 Skipping {base}, already has lyrics.")
+            print(f"🎵 Skipping {file}, already has lyrics.")
             continue
+        elif recursive:  # albums mode
+            title, artist = get_metadata_tags(file)
+            base = f"{artist} - {title}" if artist else title
+        else:  # single files mode
+            filename = os.path.basename(file)
+            base = os.path.splitext(filename)[0]
 
         print("🔍", end = "")
         results = search_genius(base)   # search_genius flips internally
@@ -158,7 +205,9 @@ def genius_tagger(folder: str):
 
         # 🔁 Retry with stripped "feat." if low score (manual trigger)
         if decision != "auto":
+            print(base)
             alt_query = flip_query(keep_main(flip_query(base)))
+            print(alt_query)
             if alt_query != base:
                 print("🔁", end = "")
                 results = search_genius(alt_query)
@@ -177,8 +226,12 @@ def genius_tagger(folder: str):
             pass
 
         elif decision == "manual":
-            # Defer manual review: store file path, display name, and filtered candidates
-            pending.append((file, base, data))
+            if not manual_only:
+                with open(MANUAL_FILE, "a", encoding="utf-8") as out:
+                    out.write(file + "\n")
+            else:
+                # Defer manual review: store file path, display name, and filtered candidates
+                pending.append((file, base, data))
 
     # After loop: prompt user for pending/manual ones
     if pending:
@@ -201,10 +254,9 @@ def genius_tagger(folder: str):
             else:
                 print(f"⏭️ Skipped {base}")
 
+
 if __name__ == "__main__":
-    folder = input("📂 Enter folder with MP3 files: ").strip()
-    genius_tagger(folder)
-
-
+    source = input("📂 Enter folder path or manual_review.txt: ").strip()
+    genius_tagger(source)
 
 
