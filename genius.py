@@ -3,6 +3,7 @@ import glob
 import configparser
 from mutagen.id3 import ID3, USLT, ID3NoHeaderError
 from rapidfuzz import fuzz
+from tqdm import tqdm
 import lyricsgenius
 from utils import flip_query, keep_main
 
@@ -50,7 +51,8 @@ def get_metadata_tags(filepath: str):
     if not title:
         title = os.path.splitext(os.path.basename(filepath))[0]
     if not artist:
-        artist = ""
+        artist = str(tags["TPE1"])
+        tqdm.write(f"⛔ Album Artist is None! in {filepath}")
 
     return title.strip(), artist.strip()
 
@@ -90,7 +92,7 @@ def search_genius(query: str):
         scored.sort(key=lambda x: x[0], reverse=True)
         return scored
     except Exception as e:
-        print(f"⛔ Genius search failed for '{query}': {e}")
+        tqdm.write(f"⛔ Genius search failed for '{query}': {e}")
         return []
 
 def choose_song(matches, query: str, min_score: int = 50, auto_threshold: int = 75):
@@ -124,13 +126,13 @@ def choose_song(matches, query: str, min_score: int = 50, auto_threshold: int = 
     if not filtered:
         # show best score for debugging
         best = scored[0][0] if scored else 0
-        print(f"⏭️ Skipping {query}")
+        # print(f"⏭️ Skipping {query}")
         return "skip", None
 
     best_score, best_song = filtered[0]
 
     if best_score >= auto_threshold:
-        print("🤖", end = "")
+        # print("🤖", end = "")
         return "auto", best_song
 
     # Manual needed: return filtered candidates (score, song)
@@ -148,8 +150,8 @@ def fetch_lyrics(song):
         if lyrics_song:
             return lyrics_song.lyrics
     except Exception as e:
-        print(f"⛔ Failed to fetch lyrics for {song.get('title')} - {e}")
-    return None
+        tqdm.write(f"⛔ Failed to fetch lyrics for {song.get('title')} - {e}")
+        return "Error"
 
 def tag_with_lyrics(filepath: str, lyrics: str):
     """Write lyrics to MP3 file (replace old USLT frames)."""
@@ -165,16 +167,17 @@ def tag_with_lyrics(filepath: str, lyrics: str):
 
     tags.add(USLT(encoding=3, lang="eng", desc="", text=lyrics))
     tags.save(filepath)
-    if lyrics != "Instrumental":
-        print(f"✅ Tagged {os.path.basename(filepath)}")
-    else:
-        print(f"✅ Tagged {os.path.basename(filepath)} as Instrumenal")
+    # if lyrics != "Instrumental":
+    #    # print(f"✅ Tagged {os.path.basename(filepath)}")
+    # else:
+    #    # print(f"✅ Tagged {os.path.basename(filepath)} as Instrumenal")
 
 def genius_tagger(folder: str):
     """Main function to process all MP3s in a folder. Manual prompts deferred to the end."""
     pending = []
     recursive = False
     manual_only = False
+    stats = {"auto": 0, "manual": 0, "skip": 0, "haslyrics": 0}
 
     if os.path.isfile(folder) and folder.endswith(".txt"):
         # Manual pass: read paths from file
@@ -188,50 +191,65 @@ def genius_tagger(folder: str):
         mp3_files = get_mp3_files(folder, recursive=recursive)
         print(f"🎵 Found {len(mp3_files)} MP3 files ({'recursive' if recursive else 'flat'} mode).")
 
-    for file in mp3_files:
-        if has_lyrics(file):
-            print(f"🎵 Skipping {file}, already has lyrics.")
-            continue
-        elif recursive:  # albums mode
-            title, artist = get_metadata_tags(file)
-            base = f"{artist} - {title}" if artist else title
-        else:  # single files mode
-            filename = os.path.basename(file)
-            base = os.path.splitext(filename)[0]
+    with tqdm(total=len(mp3_files), desc="Processing files", unit="file", dynamic_ncols=True) as pbar:
 
-        print("🔍", end = "")
-        results = search_genius(base)   # search_genius flips internally
-        decision, data = choose_song(results, base)
+        for file in mp3_files:
+            if has_lyrics(file):
+                stats["haslyrics"] += 1
+                pbar.update(1)
+              #  tqdm.write(f"🎵 Skipping {file}, already has lyrics.")
+                continue
+            elif recursive:  # albums mode
+                title, artist = get_metadata_tags(file)
+                base = f"{artist} - {title}" if artist else title
+            else:  # single files mode
+                filename = os.path.basename(file)
+                base = os.path.splitext(filename)[0]
 
-        # 🔁 Retry with stripped "feat." if low score (manual trigger)
-        if decision != "auto":
-            print(base)
-            alt_query = flip_query(keep_main(flip_query(base)))
-            print(alt_query)
-            if alt_query != base:
-                print("🔁", end = "")
-                results = search_genius(alt_query)
-                decision, data = choose_song(results, alt_query)
+            # tqdm.write("🔍", end = "")
+            results = search_genius(base)
+            decision, data = choose_song(results, base)
 
-        if decision == "auto":
-            song = data
-            lyrics = fetch_lyrics(song)
-            if lyrics:
-                tag_with_lyrics(file, lyrics)
-            else:
-                tag_with_lyrics(file, "Instrumental")
+            # 🔁 Retry with stripped "feat." if low score (manual trigger)
+            if decision != "auto":
+                if base:
+                    alt_query = flip_query(keep_main(flip_query(base)))
+                else:
+                    tqdm.write(f"⛔ There's something wrong with the tags in {filename}")
+               # print(alt_query)
+                if alt_query != base:
+                    # print("🔁", end = "")
+                    results = search_genius(alt_query)
+                    decision, data = choose_song(results, alt_query)
 
-        elif decision == "skip":
-            # already printed reason inside choose_song
-            pass
+            if decision == "auto":
+                song = data
+                lyrics = fetch_lyrics(song)
+                if lyrics and lyrics != "Error":
+                    tag_with_lyrics(file, lyrics)
+                elif not lyrics:
+                    tag_with_lyrics(file, "Instrumental")
+                stats["auto"] += 1
 
-        elif decision == "manual":
-            if not manual_only:
-                with open(MANUAL_FILE, "a", encoding="utf-8") as out:
-                    out.write(file + "\n")
-            else:
-                # Defer manual review: store file path, display name, and filtered candidates
-                pending.append((file, base, data))
+            elif decision == "skip":
+                stats["skip"] += 1
+                # already printed reason inside choose_song
+                pass
+
+            elif decision == "manual":
+                stats["manual"] += 1
+                if not manual_only:
+                    with open(MANUAL_FILE, "a", encoding="utf-8") as out:
+                        out.write(file + "\n")
+                else:
+                    # Defer manual review: store file path, display name, and filtered candidates
+                    pending.append((file, base, data))
+
+           # Update progress bar and live stats
+            pbar.update(1)
+            pbar.set_description(
+                f"Processing files |✅ {stats['auto']}|🕵️ {stats['manual']}|⏭️ {stats['skip']}|📝 {stats['haslyrics']}|"
+            )
 
     # After loop: prompt user for pending/manual ones
     if pending:
@@ -239,7 +257,7 @@ def genius_tagger(folder: str):
     for file, base, scored in pending:
         if not has_lyrics(file):
             base = flip_query(base)
-            print(f"\n🔍 Manual review needed for: {base}")
+            tqdm.write(f"\n🔍 Manual review needed for: {base}")
             for idx, (score, song) in enumerate(scored, 1):
                 print(f"🎧 {idx}. {song.get('title')} - {song.get('primary_artist',{}).get('name')} ({score:.1f}%)")
 
@@ -253,6 +271,15 @@ def genius_tagger(folder: str):
                     tag_with_lyrics(file, lyrics)
             else:
                 print(f"⏭️ Skipped {base}")
+
+    # ✅ Final summary
+    print("\n🏁 Process complete!")
+    print(f"   ✅ Tagged: {stats['auto']}")
+    print(f"   🕵️ Manual review needed: {stats['manual']}")
+    print(f"   ⏭️ Skipped: {stats['skip']}")
+    print(f"   📝 Already has lyrics: {stats['haslyrics']}")
+    if stats['manual']:
+        print(f"\n💾 Manual review list saved to: {os.path.abspath(MANUAL_FILE)}")
 
 
 if __name__ == "__main__":

@@ -1,36 +1,44 @@
-X:\Albums\Y\Young Marble Giants\(1980) Colossal Youth\16 - This Way.mp3
-X:\Albums\Y\Young Marble Giants\(1980) Colossal Youth\18 - The Clock.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1978) Yellow Magic Orchestra [Remastered]\01 - Computer Game (Theme From The Circus).mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1978) Yellow Magic Orchestra [Remastered]\03 - Simoon.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1978) Yellow Magic Orchestra [Remastered]\05 - Computer Game (Theme From The Invader).mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1979) Yellow Magic Orchestra [US Remastered]\01 - Computer Game (Theme From The Circus).mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1979) Yellow Magic Orchestra [US Remastered]\03 - Simoon.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1979) Yellow Magic Orchestra [US Remastered]\05 - Computer Game (Theme From The Invader).mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Multiplies [Remastered]\01 - Nice Age.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Multiplies [Remastered]\06 - Multiplies.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Public Pressure [Remastered]\07 - Radio Junk.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\01 - Jingle Y.M.O.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\02 - Nice Age.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\03 - Snakeman Show.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\05 - Snakeman Show.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\07 - Snakeman Show.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\09 - Snakeman Show.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\10 - Multiplies.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1980) Zoshoku [Remastered]\11 - Snakeman Show.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1981) BGM [Remastered]\04 - Happy End.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1981) Technodelic [Remastered]\03 - Stairs.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1981) Technodelic [Remastered]\06 - Taiso.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1981) Technodelic [Remastered]\09 - Prologue.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1983) Naughty Boys [Remastered]\01 - Kimi Ni Mune Kyun.mp3
-X:\Albums\Y\Yellow Magic Orchestra\(1984) After Service [Remastered]\CD2\08 - Kimi Ni Mune Kyun.mp3
-X:\Albums\Y\Yagya\(2006) Will I Dream During The Process\01 - Wind and Thunder.mp3
-X:\Albums\Y\Yagya\(2006) Will I Dream During The Process\02 - Choose.mp3
-X:\Albums\Y\Yagya\(2006) Will I Dream During The Process\03 - As It Is.mp3
-X:\Albums\Y\Yagya\(2009) Rigning\02 - Rigning Tvo.mp3
-X:\Albums\Y\Yagya\(2009) Rigning\05 - Rigning Fimm.mp3
-X:\Albums\Y\Yagya\(2009) Rigning\07 - Rigning Sjo.mp3
-X:\Albums\Y\Yo La Tengo\(1997) I Can Hear The Heart Beating As One\CD Extra\03-Autumn Sweater (Remixed By µ-Ziq).mp3
-X:\Albums\Y\Yo La Tengo\(2006) I'm Not Afraid Of You And I Will Beat Your Ass\01 - Pass The Hatchet.mp3
-X:\Albums\Y\Yo La Tengo\(2006) I'm Not Afraid Of You And I Will Beat Your Ass\09 - Instrumental.mp3
-X:\Albums\Y\Yo La Tengo\(2006) I'm Not Afraid Of You And I Will Beat Your Ass\11 - Ronnie.mp3
-X:\Albums\Y\Yeah Yeah Yeahs\(2007) Is Is [EP]\05 - 10x10.mp3
+X:\Albums\V\Viet Cong\(2015) Viet Cong\01 - Newspaper Spoons.mp3
+X:\Albums\V\Viet Cong\(2015) Viet Cong\02 - Pointless Experience.mp3
+X:\Albums\V\Viet Cong\(2015) Viet Cong\03 - March of Progress.mp3
+X:\Albums\V\Viet Cong\(2015) Viet Cong\04 - Bunker Buster.mp3
+X:\Albums\V\Viet Cong\(2015) Viet Cong\06 - Silhouettes.mp3
+X:\Albums\V\Viet Cong\(2015) Viet Cong\07 - Death.mp3
+X:\Albums\V\Vas\(1997) Sunyata\01 - Naingal.mp3
+X:\Albums\V\Vas\(1997) Sunyata\04 - Sunyata.mp3
+X:\Albums\V\Vas\(1997) Sunyata\05 - Apsara.mp3
+X:\Albums\V\Vas\(1997) Sunyata\06 - Astrae.mp3
+X:\Albums\V\Vas\(1997) Sunyata\07 - Iman.mp3
+X:\Albums\V\Vas\(1998) Offerings\01 - Svarga.mp3
+X:\Albums\V\Vas\(1998) Offerings\04 - The Promise.mp3
+X:\Albums\V\Vas\(1998) Offerings\05 - Ellora.mp3
+X:\Albums\V\Vas\(1998) Offerings\06 - Temple of the Maiden.mp3
+X:\Albums\V\Vas\(1998) Offerings\07 - Leyli.mp3
+X:\Albums\V\Vas\(1998) Offerings\08 - Veiled.mp3
+X:\Albums\V\Vas\(2000) In The Garden Of Souls\02 - Inamorata .mp3
+X:\Albums\V\Vas\(2000) In The Garden Of Souls\03 - Samaya.mp3
+X:\Albums\V\Vas\(2000) In The Garden Of Souls\09 - Lila.mp3
+X:\Albums\V\Vas\(2000) In The Garden Of Souls\10 - Unbecome.mp3
+X:\Albums\V\Vas\(2000) In The Garden Of Souls\11 - Sevdance.mp3
+X:\Albums\V\Vas\(2004) Feast Of Silence\02 - In Our Faith.mp3
+X:\Albums\V\Vas\(2004) Feast Of Silence\03 - Mandara.mp3
+X:\Albums\V\Vas\(2004) Feast Of Silence\05 - Moksha.mp3
+X:\Albums\V\Vas\(2004) Feast Of Silence\07 - Bardo.mp3
+X:\Albums\V\Vacca\(2003) Mr. Cartoon [EP]\01 - Mr. Cartoon.mp3
+X:\Albums\V\Vacca\(2003) Mr. Cartoon [EP]\02 - Non Mollo.mp3
+X:\Albums\V\Van Halen\(1993) Live-Right Here, Right Now\CD2\03 - Why Can't This Be Love (live).mp3
+X:\Albums\V\Van Halen\(1993) Live-Right Here, Right Now\CD2\05 - Finish What Ya Started (live).mp3
+X:\Albums\V\Van Halen\(1993) Live-Right Here, Right Now\CD2\06 - Best Of Both Worlds (live).mp3
+X:\Albums\V\Van Halen\(1993) Live-Right Here, Right Now\CD2\11 - Top Of The World (live).mp3
+X:\Albums\V\Van Halen\(1986) 5150\08 - 5150.mp3
+X:\Albums\V\Van Halen\(1981) Fair Warning\02 - 'Dirty Movies'.mp3
+X:\Albums\V\Vasco Rossi\(1989) Liberi Liberi [2009 Remastered]\08 - ''Stasera!''.mp3
+X:\Albums\V\Van Morrison\(1970) His Band And The Street Choir\03 - Give Me A Kiss.mp3
+X:\Albums\V\Van Morrison\Van Morrison & The Chieftains - (1988) Irish Heartbeat\03 - Ta Mo Chleamhnas Deanta.mp3
+X:\Albums\V\Van Morrison\Van Morrison & The Chieftains - (1988) Irish Heartbeat\04 - Raglan.mp3
+X:\Albums\V\Van Morrison\(1970) His Band And The Street Choir\03 - Give Me A Kiss.mp3
+X:\Albums\V\Van Morrison\Van Morrison & The Chieftains - (1988) Irish Heartbeat\03 - Ta Mo Chleamhnas Deanta.mp3
+X:\Albums\V\Van Morrison\Van Morrison & The Chieftains - (1988) Irish Heartbeat\04 - Raglan.mp3
+X:\Albums\V\Van Morrison\(1970) His Band And The Street Choir\03 - Give Me A Kiss.mp3
+X:\Albums\V\Van Morrison\Van Morrison & The Chieftains - (1988) Irish Heartbeat\03 - Ta Mo Chleamhnas Deanta.mp3
+X:\Albums\V\Van Morrison\Van Morrison & The Chieftains - (1988) Irish Heartbeat\04 - Raglan.mp3
