@@ -14,6 +14,7 @@ def download_playlist(playlist_url: str) -> list:
 
     # use video ID as temporary filename (avoids clashes & illegal chars)
     ydl_opts = {
+        "update": True,
         "format": "bestaudio/best",
         "outtmpl": os.path.join(OUTPUT_DIR, "%(id)s.%(ext)s"),
         "postprocessors": [{
@@ -23,7 +24,8 @@ def download_playlist(playlist_url: str) -> list:
         }],
         "ffmpeg_location": FFMPEG_PATH,
         "ignoreerrors": True,
-        "noplaylist": True
+        "noplaylist": True,
+        "quiet": True,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:

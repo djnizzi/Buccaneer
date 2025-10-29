@@ -1,7 +1,71 @@
-from mutagen.id3 import ID3, APIC, TOAL, TSRC, TALB, TPE1, TPE2, TIT2, TCON, TDRC, TPUB, TDOR, COMM, TCOM, USLT
+import os
+from mutagen.id3 import ID3, APIC, TOAL, TSRC, TALB, TPE1, TPE2, TIT2, TCON, TDRC, TPUB, TDOR, COMM, TCOM, USLT, ID3NoHeaderError
 import requests
+from tqdm import tqdm
 from utils import normalize_yt_title, merge_feat, fetch_and_crop_cover, clean_discogs_artist
 from yt import get_yt_metadata
+
+def tagged_with_discogs(filepath: str):
+
+    try:
+        tags = ID3(filepath)
+    except ID3NoHeaderError:
+        tags = None
+
+    url = None
+    if tags:
+        if "TOAL" in tags:
+            url = str(tags["TOAL"])
+            if url == "":
+                url = None
+
+    return url
+
+
+def get_metadata_tags(filepath: str):
+    """
+    Return (title, artist) from ID3 tags.
+    - Title from TIT2
+    - Album Artist (TPE2), unless it contains 'VVAA'
+    - If VVAA in Album Artist, fallback to Artist (TPE1)
+    """
+    try:
+        tags = ID3(filepath)
+    except ID3NoHeaderError:
+        tags = None
+
+    title, artist, album, year = None, None, None, None
+    if tags:
+        if "TIT2" in tags:
+            title = str(tags["TIT2"])
+        if "TALB" in tags:
+            album = str(tags["TALB"])
+        if "TDRC" in tags:
+            year = str(tags["TDRC"])
+        if "TPE2" in tags:  # Album Artist
+            artist = str(tags["TPE2"])
+        if artist:
+            if "VVAA" in artist.upper():
+                if "TPE1" in tags:  # fallback to Artist
+                    artist = str(tags["TPE1"])
+
+    # fallback from filename if missing
+    if not title:
+        title = os.path.splitext(os.path.basename(filepath))[0]
+    if not artist:
+        if tags:
+            if "TPE1" in tags:
+                artist = str(tags["TPE1"])
+            else:
+                tqdm.write(f"⛔ Artist is None! in {filepath}")
+                artist = "NOARTIST"
+            tqdm.write(f"⛔ Album Artist is None! in {filepath}")
+        else:
+            tqdm.write(f"⛔ No tags! in {filepath}")
+            artist = "NOARTIST"
+
+    return title.strip(), artist.strip(), album, year
+
 
 
 # --- tag from YT ---
@@ -61,31 +125,41 @@ def tag_from_yt(filepath: str, url: str):
     id3.save(v2_version=3)
     print(f"✅ Tagged {filepath} with YouTube metadata")
 
-# --- Tag MP3 with Discogs Metadata ---
-def tag_mp3_with_discogs(filepath: str, release):
-    """Tag an MP3 file with Discogs metadata, cover art, URL, and catalog/ISRC."""
+def tag_mp3_with_discogs(filepath: str, release, overwrite: str = "y"):
+    """
+    Tag an MP3 file with Discogs metadata, cover art, URL, and catalog/ISRC.
+    If overwrite='n', only writes tags that are currently missing.
+    """
     if not release:
         print(f"⚠️ No release provided for tagging {filepath}")
         return
+
     try:
         id3 = ID3(filepath)
     except Exception:
-          id3 = ID3()
+        id3 = ID3()
 
-    # --- Core tags ---
+    def add_tag(frame_class, *args, **kwargs):
+        """Add a tag if overwriting is allowed or tag doesn't exist."""
+        frame_id = frame_class.__name__[:4]
+        if overwrite.lower() == "n" and frame_id in id3:
+            # Skip if not overwriting and tag already present
+            return
+        id3.add(frame_class(*args, **kwargs))
+
     try:
-        artists = [clean_discogs_artist(a.name if not isinstance(a, dict) else a.get("name", "Unknown Artist"))
-                   for a in getattr(release, "artists", [])]
-        # Join them with "; "
+        # --- Core tags ---
+        artists = [
+            clean_discogs_artist(a.name if not isinstance(a, dict) else a.get("name", "Unknown Artist"))
+            for a in getattr(release, "artists", [])
+        ]
         artists_str = "; ".join(artists) if artists else "Unknown Artist"
-        title = getattr(release, "title", "Unknown Title")
         album = getattr(release, "title", "Unknown Album")
         formats = getattr(release, "formats", [])
         is_single = False
         is_ep = False
 
         for fmt in formats:
-            # Check format name (e.g. "CD", "File") and descriptions (e.g. "Single", "AAC")
             if "name" in fmt and "single" in fmt["name"].lower():
                 is_single = True
                 break
@@ -101,38 +175,39 @@ def tag_mp3_with_discogs(filepath: str, release):
 
         if is_single:
             album += " [Single]"
-            id3.add(TPE1(encoding=3, text=artists_str if artists else "Unknown Artist"))  # Lead artist
         if is_ep:
             album += " [EP]"
+
         genres = list(getattr(release, "genres", []))
         year = getattr(release, "year", None)
         released = (
-                getattr(release, "released", None)
-                or release.data.get("released")
-                or release.data.get("released_formatted")
+            getattr(release, "released", None)
+            or getattr(release, "data", {}).get("released")
+            or getattr(release, "data", {}).get("released_formatted")
         )
-        id3.add(TPE2(encoding=3, text=artists_str if artists else "Unknown Artist"))  # Album artist
-        #id3.add(TIT2(encoding=3, text=title))
-        id3.add(TALB(encoding=3, text=album))
+
+        add_tag(TPE1, encoding=3, text=artists_str)
+        add_tag(TPE2, encoding=3, text=artists_str)
+        # add_tag(TIT2, encoding=3, text=title)
+        add_tag(TALB, encoding=3, text=album)
         if genres:
-            id3.add(TCON(encoding=3, text=genres[0]))
+            add_tag(TCON, encoding=3, text=genres[0])
         if year:
-            id3.add(TDRC(encoding=3, text=str(year)))
+            add_tag(TDRC, encoding=3, text=str(year))
         if released:
-            id3.add(TDOR(encoding=3, text=str(released)))
+            add_tag(TDOR, encoding=3, text=str(released))
 
         # Labels / publisher
-        labels = [l.name if not isinstance(l, dict) else l.get("name", "Unknown")
-                  for l in getattr(release, "labels", [])]
+        labels = [l.name if not isinstance(l, dict) else l.get("name", "Unknown") for l in getattr(release, "labels", [])]
         if labels:
-            id3.add(TPUB(encoding=3, desc="Publisher", text="; ".join(labels)))
+            add_tag(TPUB, encoding=3, desc="Publisher", text="; ".join(labels))
 
-        # Discogs URL (use master URL if available)
-        discogs_url = getattr(getattr(release, "master", release), "url", getattr(release, "url", None))
+        # Discogs URL
+        discogs_url = getattr(release, "url", None)
         if discogs_url:
-            id3.add(TOAL(encoding=3, desc="DiscogsURL", text=discogs_url))
+            add_tag(TOAL, encoding=3, desc="DiscogsURL", text=discogs_url)
 
-        # Catalog number (from first label)
+        # Catalog number
         catno = None
         if getattr(release, "labels", []):
             label = release.labels[0]
@@ -141,36 +216,28 @@ def tag_mp3_with_discogs(filepath: str, release):
             else:
                 catno = getattr(label, "catno", None)
         if catno:
-            id3.add(TSRC(encoding=3, desc="CatalogNumber", text=catno))
+            add_tag(TSRC, encoding=3, desc="CatalogNumber", text=catno)
 
-        # Cover image
-        if hasattr(release, "images") and release.images:
-            img_url = release.images[0].get("resource_url")  # use resource_url
-            if img_url:
+        # Cover art
+        existing_covers = [f for f in id3.getall("APIC") if f.data]
+        if overwrite.lower() == "n" and existing_covers:
+            print("🖼️ Skipping cover art (already present)")
+        elif hasattr(release, "images") and release.images:
+            img_url = release.images[0].get("resource_url")
+            if img_url and (overwrite.lower() == "y" or "APIC" not in id3):
                 try:
-                    headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                                      "Chrome/116.0.0.0 Safari/537.36"
-                    }
+                    headers = {"User-Agent": "Mozilla/5.0"}
                     response = requests.get(img_url, headers=headers)
                     if response.headers.get("content-type", "").startswith("image/"):
                         img_data = response.content
                         mime_type = response.headers["content-type"]
-
-                        id3.add(APIC(
-                            encoding=3,
-                            mime=mime_type,
-                            type=3,  # Cover (front)
-                            desc="Cover",
-                            data=img_data
-                        ))
-                        print("🖼️ Added cover art ")
+                        add_tag(APIC, encoding=3, mime=mime_type, type=3, desc="Cover", data=img_data)
+                        print("🖼️ Added cover art")
                 except Exception as e:
                     print(f"⚠️ Could not fetch cover art: {e}")
 
-        id3.save(v2_version=3)
+        id3.save(filepath, v2_version=3)
         print(f"✅ Saved tags for {filepath}")
 
     except Exception as e:
-        print(f"❌ Error tagging: {e}")
+        print(f"❌ Error tagging {filepath}: {e}")

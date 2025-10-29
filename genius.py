@@ -1,11 +1,11 @@
 import os
-import glob
 import configparser
 from mutagen.id3 import ID3, USLT, ID3NoHeaderError
 from rapidfuzz import fuzz
 from tqdm import tqdm
 import lyricsgenius
-from utils import flip_query, keep_main
+from utils import flip_query, keep_main, get_mp3_files
+from tag import get_metadata_tags
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -20,56 +20,13 @@ genius.remove_section_headers = True
 MANUAL_FILE = "manual_review.txt"
 SKIPPED_FILE = "skipped_review.txt"
 
-def get_mp3_files(folder: str, recursive: bool = False):
-    """Return list of all mp3 files in a folder (optionally recursive)."""
-    if recursive:
-        return glob.glob(os.path.join(folder, "**", "*.mp3"), recursive=True)
-    return glob.glob(os.path.join(folder, "*.mp3"))
-
 def is_in_manual_review(filepath, review_file=MANUAL_FILE):
     with open(review_file, "r", encoding="utf-8") as f:
         # Use a set for instant lookups
         manual_paths = {line.strip() for line in f if line.strip()}
     return filepath in manual_paths
 
-def get_metadata_tags(filepath: str):
-    """
-    Return (title, artist) from ID3 tags.
-    - Title from TIT2
-    - Album Artist (TPE2), unless it's 'VVAA'
-    - If Album Artist == 'VVAA', fallback to Artist (TPE1)
-    """
-    try:
-        tags = ID3(filepath)
-    except ID3NoHeaderError:
-        tags = None
 
-    title, artist = None, None
-    if tags:
-        if "TIT2" in tags:
-            title = str(tags["TIT2"])
-        if "TPE2" in tags:  # Album Artist
-            artist = str(tags["TPE2"])
-        if artist and artist.upper() == "VVAA":
-            if "TPE1" in tags:  # fallback to Artist
-                artist = str(tags["TPE1"])
-
-    # fallback from filename if missing
-    if not title:
-        title = os.path.splitext(os.path.basename(filepath))[0]
-    if not artist:
-        if tags:
-            if "TPE1" in tags:
-                artist = str(tags["TPE1"])
-            else:
-                tqdm.write(f"⛔ Artist is None! in {filepath}")
-                artist = "NOARTIST"
-            tqdm.write(f"⛔ Album Artist is None! in {filepath}")
-        else:
-            tqdm.write(f"⛔ No tags! in {filepath}")
-            artist = "NOARTIST"
-
-    return title.strip(), artist.strip()
 
 def has_lyrics(filepath: str) -> bool:
     """Check if MP3 already has lyrics tag."""
@@ -220,7 +177,7 @@ def genius_tagger(folder: str):
               #  tqdm.write(f"🎵 Skipping {file}, already has lyrics.")
                 continue
             elif recursive:  # albums mode
-                title, artist = get_metadata_tags(file)
+                title, artist, album, year = get_metadata_tags(file)
                 base = f"{artist} - {title}" if artist else title
             else:  # single files mode
                 filename = os.path.basename(file)

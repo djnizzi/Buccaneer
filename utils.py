@@ -1,4 +1,6 @@
 import re
+import os
+import glob
 import unicodedata
 import requests
 from PIL import Image
@@ -219,3 +221,9 @@ def keep_main(title: str) -> str:
     title = re.sub(r"\b(?:feat|ft)\b.*", "", title, flags=re.IGNORECASE)
 
     return " ".join(title.split()).strip()
+
+def get_mp3_files(folder: str, recursive: bool = False):
+    """Return list of all mp3 files in a folder (optionally recursive)."""
+    if recursive:
+        return glob.glob(os.path.join(folder, "**", "*.mp3"), recursive=True)
+    return glob.glob(os.path.join(folder, "*.mp3"))
