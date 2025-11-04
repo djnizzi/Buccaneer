@@ -1,3 +1,8 @@
 __pycache__/
+downloads/
 secrets.ini
-*.txt
+manual_review.txt
+skipped_review.txt
+XAlbumsTTool.txt
+saved_searches.txt
+all_cues.txt
