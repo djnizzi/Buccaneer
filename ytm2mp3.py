@@ -11,6 +11,7 @@ FFMPEG_PATH = r"C:\Users\djniz\anaconda3\envs\python3_13\Library\bin"
 def download_playlist(playlist_url: str) -> list:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     results = []
+    i = 0
 
     # use video ID as temporary filename (avoids clashes & illegal chars)
     ydl_opts = {
@@ -47,11 +48,10 @@ def download_playlist(playlist_url: str) -> list:
             except Exception as e:
                 print(f"⚠️ Failed to download {entry.get('title')}: {e}")
                 continue
-
             artist, song = normalize_yt_title(entry)
             if not song:
-                print("⚠️ Skipping entry without title")
-                continue
+                i += 1
+                song = "Untitled " + str(i)
 
             artist = clean_feat(artist)
 

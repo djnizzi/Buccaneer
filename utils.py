@@ -1,7 +1,7 @@
 import re
 import os
 import glob
-import unicodedata
+#import unicodedata
 import requests
 from PIL import Image
 from io import BytesIO
@@ -90,30 +90,29 @@ def clean_title(title: str) -> str:
     but preserves meaningful info like 'remix' or 'feat'.
     """
     # Normalize accents / smart quotes
-    title = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("utf-8")
-
-    emoji_pattern = re.compile(
-        "["
-        "\U0001F600-\U0001F64F"  # emoticons
-        "\U0001F300-\U0001F5FF"  # symbols & pictographs
-        "\U0001F680-\U0001F6FF"  # transport & map symbols
-        "\U0001F1E0-\U0001F1FF"  # flags
-        "\U00002500-\U00002BEF"  # chinese characters
-        "\U00002702-\U000027B0"
-        "\U00002702-\U000027B0"
-        "\U000024C2-\U0001F251"
-        "\U0001f926-\U0001f937"
-        "\U00010000-\U0010ffff"
-        "\u2640-\u2642"
-        "\u2600-\u2B55"
-        "\u200d"
-        "\u23cf"
-        "\u23e9"
-        "\u231a"
-        "\ufe0f"  # dingbats
-        "\u3030"
-        "]+", flags=re.UNICODE)
-    title = emoji_pattern.sub(r'', title)
+    # title = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("utf-8")
+    # emoji_pattern = re.compile(
+    #     "["
+    #     "\U0001F600-\U0001F64F"  # emoticons
+    #     "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    #     "\U0001F680-\U0001F6FF"  # transport & map symbols
+    #     "\U0001F1E0-\U0001F1FF"  # flags
+    #     "\U00002500-\U00002BEF"  # chinese characters
+    #     "\U00002702-\U000027B0"
+    #     "\U00002702-\U000027B0"
+    #     "\U000024C2-\U0001F251"
+    #     "\U0001f926-\U0001f937"
+    #     "\U00010000-\U0010ffff"
+    #     "\u2640-\u2642"
+    #     "\u2600-\u2B55"
+    #     "\u200d"
+    #     "\u23cf"
+    #     "\u23e9"
+    #     "\u231a"
+    #     "\ufe0f"  # dingbats
+    #     "\u3030"
+    #     "]+", flags=re.UNICODE)
+    # title = emoji_pattern.sub(r'', title)
 
     noise_words = [
         "official video", "official music video", "official audio", "letra/lyrics",
@@ -122,7 +121,6 @@ def clean_title(title: str) -> str:
         "original mix", "extended mix", "letra", "lyric video", "melodic, progressive house",
         "lyric visualizer", "visualizer", "audio", "visualiser"
     ]
-
     # Build a single regex pattern
     escaped_words = [re.escape(word) for word in noise_words]
     pattern = re.compile(
@@ -131,13 +129,10 @@ def clean_title(title: str) -> str:
         + r"|\b(" + "|".join(escaped_words) + r")\b",
         flags=re.IGNORECASE
     )
-
     # Apply to title
     title = pattern.sub("", title)
     # Clean extra spaces
     title = re.sub(r"\s{2,}", " ", title).strip()
-
-
     if " - " not in title:
         return title  # nothing to do
     artist, song = title.split(" - ", 1)
