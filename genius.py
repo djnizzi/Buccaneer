@@ -6,6 +6,9 @@ from tqdm import tqdm
 import lyricsgenius
 from utils import flip_query, keep_main, get_mp3_files
 from tag import get_metadata_tags
+import time
+import threading
+import msvcrt
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -19,6 +22,22 @@ genius.remove_section_headers = True
 
 MANUAL_FILE = "manual_review.txt"
 SKIPPED_FILE = "skipped_review.txt"
+paused = False
+should_quit = False
+
+def key_listener():
+    """Listens for 'p' to pause/resume and 'q' to quit."""
+    global paused, should_quit
+    while True:
+        if msvcrt.kbhit():
+            key = msvcrt.getch().decode('utf-8').lower()
+            if key == 'p':
+                paused = not paused
+                print("\n⏸️ Paused" if paused else "\n▶️ Resumed")
+            elif key == 'q':
+                should_quit = True
+                print("\n🛑 Quit requested.")
+        time.sleep(0.1)  # 🟢 this prevents CPU thrashing
 
 def is_in_manual_review(filepath, review_file=MANUAL_FILE):
     with open(review_file, "r", encoding="utf-8") as f:
@@ -166,6 +185,10 @@ def genius_tagger(folder: str):
     with tqdm(total=len(mp3_files), desc="Searching and tagging...", unit="file", dynamic_ncols=True, colour="cyan") as pbar:
 
         for file in mp3_files:
+            if should_quit:
+                break
+            while paused:
+                 time.sleep(0.1)
             if (is_in_manual_review(file) or is_in_manual_review(file, SKIPPED_FILE)) and not manual_only:
                 pbar.colour = "white"
                 pbar.update(1)
@@ -266,6 +289,7 @@ def genius_tagger(folder: str):
 
 
 if __name__ == "__main__":
+    threading.Thread(target=key_listener, daemon=True).start()
     source = input("📂 Enter folder path or manual_review.txt: ").strip()
     genius_tagger(source)
 

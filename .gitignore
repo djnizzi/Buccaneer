@@ -1,4 +1,5 @@
 __pycache__/
+.idea/
 downloads/
 secrets.ini
 manual_review.txt

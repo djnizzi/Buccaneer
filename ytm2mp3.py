@@ -3,9 +3,26 @@ import yt_dlp
 from utils import normalize_yt_title, safe_filename, clean_feat, clean_title
 from discogs import search_discogs_with_prompt
 from tag import tag_mp3_with_discogs, tag_from_yt
+from tqdm import tqdm
 
 OUTPUT_DIR = "downloads"
 FFMPEG_PATH = r"C:\Users\djniz\anaconda3\envs\python3_13\Library\bin"
+
+def make_progress_hook():
+    pbar = None
+    def hook(d):
+        nonlocal pbar
+        if d['status'] == 'downloading':
+            if pbar is None:
+                total = d.get('total_bytes') or d.get('total_bytes_estimate')
+                pbar = tqdm(total=total, unit='B', unit_scale=True, desc=d.get('filename', 'downloading'))
+            pbar.n = d.get('downloaded_bytes', 0)
+            pbar.refresh()
+        elif d['status'] == 'finished':
+            if pbar:
+                pbar.close()
+                pbar = None
+    return hook
 
 # --- Download Playlist ---
 def download_playlist(playlist_url: str) -> list:
@@ -27,13 +44,15 @@ def download_playlist(playlist_url: str) -> list:
         "ignoreerrors": True,
         "noplaylist": True,
         "quiet": True,
+        "no_warnings": True,
+        "progress_hooks": [make_progress_hook()],
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(playlist_url, download=False)
         entries = info.get("entries", [])
 
-        for entry in entries:
+        for entry in tqdm(entries, desc="Downloading videos", unit="video"):
             if not entry:
                 print("⚠️ Skipping unavailable video (entry is None)")
                 continue

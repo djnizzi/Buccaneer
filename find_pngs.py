@@ -1,22 +1,14 @@
 import os
 from tqdm import tqdm
 
-def find_empty_mp3s(folder_path, output_file="empty_mp3s.txt"):
-    """
-    Recursively searches for .mp3 files in folder_path and writes the paths
-    of empty (0-byte) files into output_file.
-    """
+def find_pngs(folder_path, output_file="png_artwork.txt"):
+
     empty_files = []
 
     for root, _, files in tqdm(os.walk(folder_path)):
         for file in files:
-            if file.lower().endswith(".mp3"):
+            if file.lower().endswith(".png"):
                 file_path = os.path.join(root, file)
-                try:
-                    if os.path.getsize(file_path) == 0:
-                        empty_files.append(file_path)
-                except OSError as e:
-                    print(f"⚠️ Could not access {file_path}: {e}")
 
     with open(output_file, "w", encoding="utf-8") as out:
         if empty_files:
@@ -33,4 +25,4 @@ if __name__ == "__main__":
     if not os.path.isdir(folder):
         print("❌ The specified path is not a valid directory.")
     else:
-        find_empty_mp3s(folder)
+        find_pngs(folder)
