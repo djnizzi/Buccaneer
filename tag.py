@@ -16,7 +16,7 @@ def tagged_with_discogs(filepath: str):
     if tags:
         if "TOAL" in tags:
             url = str(tags["TOAL"])
-            if url == "":
+            if url == "" or not "discogs" in url:
                 url = None
 
     return url
@@ -118,12 +118,12 @@ def tag_from_yt(filepath: str, url: str):
             desc="Cover",
             data=cover_data
         ))
-        print("🖼️ Added cropped YouTube thumbnail as cover")
+        # print("🖼️ Added cropped YouTube thumbnail as cover")
     else:
         print("⚠️ No valid thumbnail to add as cover, skipping")
 
     id3.save(v2_version=3)
-    print(f"✅ Tagged {filepath} with YouTube metadata")
+    # print(f"✅ Tagged {filepath} with YouTube metadata")
 
 def tag_mp3_with_discogs(filepath: str, release, overwrite: str = "y"):
     """

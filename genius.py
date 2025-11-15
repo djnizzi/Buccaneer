@@ -1,6 +1,6 @@
 import os
 import configparser
-from mutagen.id3 import ID3, USLT, ID3NoHeaderError
+from mutagen.id3 import ID3, USLT, ID3NoHeaderError, error
 from rapidfuzz import fuzz
 from tqdm import tqdm
 import lyricsgenius
@@ -55,8 +55,9 @@ def has_lyrics(filepath: str) -> bool:
             getattr(frame, "FrameID", "") == "USLT" and getattr(frame, "text", "").strip()
             for frame in tags.values()
         )
-    except ID3NoHeaderError:
-        return False
+    except (ID3NoHeaderError, error):
+        print("\n💩 ID3 error for " + filepath + " ...skipping")
+        return True
 
 def search_genius(query: str):
     """
@@ -166,7 +167,6 @@ def tag_with_lyrics(filepath: str, lyrics: str):
 def genius_tagger(folder: str):
     """Main function to process all MP3s in a folder. Manual prompts deferred to the end."""
     pending = []
-    recursive = False
     manual_only = False
     stats = {"auto": 0, "manual": 0, "skip": 0, "haslyrics": 0}
 
@@ -178,9 +178,8 @@ def genius_tagger(folder: str):
         manual_only = True
     else:
         # Normal folder run
-        recursive = "albums" in folder.lower()
-        mp3_files = get_mp3_files(folder, recursive=recursive)
-        print(f"🎵 Found {len(mp3_files)} MP3 files ({'recursive' if recursive else 'flat'} mode).")
+        mp3_files = get_mp3_files(folder, recursive=True)
+        print(f"🎵 Found {len(mp3_files)} MP3 files. Use [p] to pause/resume or [q] to quit.")
 
     with tqdm(total=len(mp3_files), desc="Searching and tagging...", unit="file", dynamic_ncols=True, colour="cyan") as pbar:
 
@@ -199,12 +198,9 @@ def genius_tagger(folder: str):
                 pbar.update(1)
               #  tqdm.write(f"🎵 Skipping {file}, already has lyrics.")
                 continue
-            elif recursive:  # albums mode
+            else:
                 title, artist, album, year = get_metadata_tags(file)
                 base = f"{artist} - {title}" if artist else title
-            else:  # single files mode
-                filename = os.path.basename(file)
-                base = os.path.splitext(filename)[0]
 
             # tqdm.write("🔍", end = "")
             results = search_genius(base)
@@ -216,7 +212,7 @@ def genius_tagger(folder: str):
                     alt_query = flip_query(keep_main(flip_query(base)))
                 else:
                     pbar.colour = "red"
-                    tqdm.write(f"⛔ There's something wrong with the tags in {filename}")
+                    tqdm.write(f"⛔ There's something wrong with the tags in {base}")
                # print(alt_query)
                 if alt_query != base:
                     # print("🔁", end = "")

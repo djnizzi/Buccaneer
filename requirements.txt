@@ -9,3 +9,4 @@ tqdm==4.67.1
 yt_dlp==2025.10.22
 numpy==2.3.4
 librosa==0.11.0
+yaspin==3.3.0
