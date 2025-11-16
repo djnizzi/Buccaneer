@@ -1,4 +1,5 @@
 import os
+import platform
 import configparser
 from mutagen.id3 import ID3, USLT, ID3NoHeaderError, error
 from rapidfuzz import fuzz
@@ -8,7 +9,8 @@ from utils import flip_query, keep_main, get_mp3_files
 from tag import get_metadata_tags
 import time
 import threading
-import msvcrt
+if platform.system() == "Windows":
+    import msvcrt
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -285,7 +287,8 @@ def genius_tagger(folder: str):
 
 
 if __name__ == "__main__":
-    threading.Thread(target=key_listener, daemon=True).start()
+    if platform.system() == "Windows":
+        threading.Thread(target=key_listener, daemon=True).start()
     source = input("📂 Enter folder path or manual_review.txt: ").strip()
     genius_tagger(source)
 
