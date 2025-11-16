@@ -22,4 +22,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Default command (CLI)
-CMD ["python", "genius.py"]
+CMD ["python", "-u", "genius.py"]
