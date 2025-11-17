@@ -1,8 +1,6 @@
 FROM python:3.13-slim
 
-# System packages required by:
-# - librosa (ffmpeg, libsndfile)
-# - pillow (zlib, jpeg libs)
+# System packages required by: librosa (ffmpeg, libsndfile) pillow (zlib, jpeg libs)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
@@ -21,5 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
-# Default command (CLI)
-CMD ["python", "-u", "genius.py"]
+# Default command (Flask server)
+EXPOSE 5000
+CMD ["python", "-u", "web_app.py"]

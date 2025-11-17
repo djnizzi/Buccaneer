@@ -9,6 +9,9 @@ services:
     volumes:
       - /volume1/Documents/buccaneer:/app    # Your code mounted inside container
       - /volume1/Music:/data              # Your music collection
-    stdin_open: true        # Keep stdin open for CLI input
-    tty: true               # Allocate a pseudo-TTY
+    tty: true
+    stdin_open: true
+    ports:
+      - "5100:5000"
     restart: unless-stopped
+

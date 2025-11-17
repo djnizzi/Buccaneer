@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+    <title>Music Tagger</title>
+</head>
+<body>
+    <h1>Music Tagger</h1>
+    <form method="post">
+        <label>Select folder:</label>
+        <select name="folder">
+            {% for f in folders %}
+                <option value="{{ f }}" {% if f == selected_folder %}selected{% endif %}>{{ f }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Run Tagger</button>
+    </form>
+
+    {% if logs %}
+        <h2>Logs:</h2>
+        <pre>{{ logs }}</pre>
+    {% endif %}
+</body>
+</html>

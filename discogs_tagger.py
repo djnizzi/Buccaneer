@@ -4,6 +4,7 @@ from tag import tag_mp3_with_discogs, get_metadata_tags, tagged_with_discogs
 from utils import get_mp3_files, strip_feat
 from discogs import search_discogs_with_prompt
 import discogs_client as dis
+import argparse
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -32,14 +33,17 @@ def is_in_saved_searches(base, review_file=SAVED_SEARCHES):
         return right.strip()
     return None
 
-def tag_dir_with_discogs(folder: str, overwrite: str = "n"):
+def tag_dir_with_discogs(folder: str, overwrite: str = "n", mode: str = "a"):
     mp3_files = get_mp3_files(folder, recursive=True)
     print(f"🎵 Found {len(mp3_files)} MP3 files")
     for file in mp3_files:
         url = tagged_with_discogs(file)
         if not url:
             title, artist, album, year = get_metadata_tags(file)
-            base = f"{strip_feat(artist)} - {strip_feat(album)} - {year}".strip().lower()
+            if mode == "a":
+                base = f"{strip_feat(artist)} - {strip_feat(album)} - {year}".strip().lower()
+            else:
+                base = f"{strip_feat(artist)} - {strip_feat(title)}".strip().lower()
             is_not_in_search = True
             saved_release_id = is_in_saved_searches(base)
             if saved_release_id:
@@ -59,7 +63,26 @@ def tag_dir_with_discogs(folder: str, overwrite: str = "n"):
                     out.write(base + " discogs:" + str(discogs_release) + "\n")
             tag_mp3_with_discogs(file, release, overwrite)
 
+
+def main():
+    parser = argparse.ArgumentParser(description="Tagger CLI")
+    parser.add_argument("--path", type=str, help="Folder path to process")
+    parser.add_argument("--overwrite", type=str, choices=["y", "n"], help="Overwrite existing tags? (y/n)")
+    parser.add_argument("--mode", type=str, choices=["s", "a"], help="Mode: songs (s) or albums (a)")
+
+    args = parser.parse_args()
+
+    if not args.path:
+        args.path = input("📂 Enter folder path: ").strip()
+
+    if not args.overwrite:
+        args.overwrite = input("📝 Overwrite (y|N)? ").strip().lower()
+
+    if not args.mode:
+        args.mode = input("📝 (s)ongs|(A)lbums? ").strip().lower()
+
+    tag_dir_with_discogs(args.path, args.overwrite, args.mode)
+
 if __name__ == "__main__":
-    source = input("📂 Enter folder path: ").strip()
-    overwrite = input("📝 Overwrite (y|n)? ").strip().lower()
-    tag_dir_with_discogs(source, overwrite)
+    main()
+
