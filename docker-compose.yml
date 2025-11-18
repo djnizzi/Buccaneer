@@ -2,10 +2,10 @@ version: "3.8"
 
 services:
   buccaneer:                      # The service name
-    image: buccaneer-image       # The Docker image you will build
     container_name: buccaneer
     build:
       context: /volume1/Documents/buccaneer   # Path to your Dockerfile
+    command: ["python", "-u", "web_app.py"]
     volumes:
       - /volume1/Documents/buccaneer:/app    # Your code mounted inside container
       - /volume1/Music:/data              # Your music collection

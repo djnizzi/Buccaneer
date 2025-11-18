@@ -1,6 +1,3 @@
-from flask import Flask, render_template, request
-import os
-from discogs_tagger import run_tagger  # wrap your CLI logic into a callable function
 from flask import Flask, render_template
 
 app = Flask(__name__)
