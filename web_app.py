@@ -38,11 +38,14 @@ def genius_page():
     logs = ""
 
     if request.method == "POST":
-        selected_folder = request.form["folder"]
+        selected_folder = request.form.get("folder", "").strip()
 
-        full_path = f"{MUSIC_ROOT}/{selected_folder.strip()}"
+        if not selected_folder:
+            logs = "❌ No folder provided."
+        else:
+            full_path = f"{MUSIC_ROOT}/{selected_folder}"
+            logs = run_genius(full_path)
 
-        logs = run_genius(full_path)
 
     return render_template(
         "genius_tagger.html",
