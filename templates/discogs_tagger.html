@@ -1,17 +1,31 @@
 <!doctype html>
 <html>
 <head>
-    <title>Music Tagger</title>
+    <title>Discogs Tagger</title>
 </head>
 <body>
-    <h1>Music Tagger</h1>
+    <h1>Discogs Tagger</h1>
+
     <form method="post">
-        <label>Select folder:</label>
-        <select name="folder">
-            {% for f in folders %}
-                <option value="{{ f }}" {% if f == selected_folder %}selected{% endif %}>{{ f }}</option>
-            {% endfor %}
+
+        <label>Enter folder path (relative to /data):</label><br>
+        <input type="text" name="folder" value="{{ selected_folder or '' }}" style="width: 400px;">
+        <br><br>
+
+        <label>Overwrite existing tags?</label>
+        <select name="overwrite">
+            <option value="y" {{ 'selected' if overwrite == 'y' else '' }}>Yes</option>
+            <option value="n" {{ 'selected' if overwrite == 'n' else '' }}>No</option>
         </select>
+        <br><br>
+
+        <label>Mode:</label>
+        <select name="mode">
+            <option value="a" {{ 'selected' if mode == 'a' else '' }}>Albums</option>
+            <option value="s" {{ 'selected' if mode == 's' else '' }}>Singles</option>
+        </select>
+        <br><br>
+
         <button type="submit">Run Tagger</button>
     </form>
 
@@ -21,3 +35,4 @@
     {% endif %}
 </body>
 </html>
+

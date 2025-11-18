@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+    <title>Genius Tagger</title>
+</head>
+<body>
+    <h1>Genius Tagger</h1>
+
+    <form method="post">
+
+        <label>Enter folder path (relative to /data):</label><br>
+        <input type="text" name="folder" value="{{ selected_folder or '' }}" style="width: 400px;">
+        <br><br>
+
+        <button type="submit">Run it!</button>
+    </form>
+
+    {% if logs %}
+        <h2>Logs:</h2>
+        <pre>{{ logs }}</pre>
+    {% endif %}
+</body>
+</html>
+

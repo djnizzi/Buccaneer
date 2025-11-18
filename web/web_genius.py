@@ -1,13 +1,11 @@
 import sys
 from subprocess import run
 
-def run_tagger(folder_path, overwrite, mode):
+def run_genius(folder_path):
     cmd = [
         sys.executable,
-        "discogs_tagger.py",
-        "--path", folder_path,
-        "--overwrite", overwrite,
-        "--mode", mode
+        "genius.py",
+        "--path", folder_path
     ]
 
     result = run(cmd, capture_output=True, text=True)

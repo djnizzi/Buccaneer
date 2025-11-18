@@ -9,6 +9,7 @@ from utils import flip_query, keep_main, get_mp3_files
 from tag import get_metadata_tags
 import time
 import threading
+import argparse
 if platform.system() == "Windows":
     import msvcrt
 
@@ -285,11 +286,21 @@ def genius_tagger(folder: str):
     if stats['manual']:
         print(f"\n💾 Manual review list saved to: {os.path.abspath(MANUAL_FILE)}")
 
-
-if __name__ == "__main__":
+def main():
     if platform.system() == "Windows":
         threading.Thread(target=key_listener, daemon=True).start()
-    source = input("📂 Enter folder path or manual_review.txt: ").strip()
-    genius_tagger(source)
 
 
+    parser = argparse.ArgumentParser(description="Genius CLI")
+    parser.add_argument("--path", type=str, help="Folder path to process")
+
+    args = parser.parse_args()
+
+    if not args.path:
+        args.path = input("📂 Enter folder path or manual_review.txt: ").strip()
+
+    genius_tagger(args.path)
+
+
+if __name__ == "__main__":
+    main()
