@@ -181,7 +181,10 @@ def genius_tagger(folder: str):
         manual_only = True
     else:
         # Normal folder run
-        mp3_files = get_mp3_files(folder, recursive=True)
+        mp3_files = [
+            f for f in get_mp3_files(folder, recursive=True)
+            if os.path.isfile(f) and f.lower().endswith(".mp3")
+        ]
         print(f"🎵 Found {len(mp3_files)} MP3 files. Use [p] to pause/resume or [q] to quit.")
 
     with tqdm(total=len(mp3_files), desc="Searching and tagging...", unit="file", dynamic_ncols=True, colour="cyan") as pbar:
