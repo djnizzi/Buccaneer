@@ -36,10 +36,10 @@ def key_listener():
             key = msvcrt.getch().decode('utf-8').lower()
             if key == 'p':
                 paused = not paused
-                print("\n⏸️ Paused" if paused else "\n▶️ Resumed")
+                tqdm.write("\n⏸️ Paused" if paused else "\n▶️ Resumed")
             elif key == 'q':
                 should_quit = True
-                print("\n🛑 Quit requested.")
+                tqdm.write("\n🛑 Quit requested.")
         time.sleep(0.1)  # 🟢 this prevents CPU thrashing
 
 def is_in_manual_review(filepath, review_file=MANUAL_FILE):
@@ -59,7 +59,7 @@ def has_lyrics(filepath: str) -> bool:
             for frame in tags.values()
         )
     except (ID3NoHeaderError, error):
-        print("\n💩 ID3 error for " + filepath + " ...skipping")
+        tqdm.write("\n💩 ID3 error for " + filepath + " ...skipping")
         return True
 
 def search_genius(query: str):
@@ -121,13 +121,13 @@ def choose_song(matches, query: str, min_score: int = 50, auto_threshold: int = 
     if not filtered:
         # show best score for debugging
         best = scored[0][0] if scored else 0
-        # print(f"⏭️ Skipping {query}")
+        # tqdm.write(f"⏭️ Skipping {query}")
         return "skip", None
 
     best_score, best_song = filtered[0]
 
     if best_score >= auto_threshold:
-        # print("🤖", end = "")
+        # tqdm.write("🤖", end = "")
         return "auto", best_song
 
     # Manual needed: return filtered candidates (score, song)
@@ -163,11 +163,12 @@ def tag_with_lyrics(filepath: str, lyrics: str):
     tags.add(USLT(encoding=3, lang="eng", desc="", text=lyrics))
     tags.save(filepath)
     # if lyrics != "Instrumental":
-    #    # print(f"✅ Tagged {os.path.basename(filepath)}")
+    #    # tqdm.write(f"✅ Tagged {os.path.basename(filepath)}")
     # else:
-    #    # print(f"✅ Tagged {os.path.basename(filepath)} as Instrumenal")
+    #    # tqdm.write(f"✅ Tagged {os.path.basename(filepath)} as Instrumenal")
 
 def genius_tagger(folder: str):
+
     """Main function to process all MP3s in a folder. Manual prompts deferred to the end."""
     pending = []
     manual_only = False
@@ -177,7 +178,7 @@ def genius_tagger(folder: str):
         # Manual pass: read paths from file
         with open(folder, "r", encoding="utf-8") as f:
             mp3_files = [line.strip() for line in f if line.strip()]
-        print(f"📜 Loaded {len(mp3_files)} files for manual review.")
+        tqdm.write(f"📜 Loaded {len(mp3_files)} files for manual review.")
         manual_only = True
     else:
         # Normal folder run
@@ -185,11 +186,13 @@ def genius_tagger(folder: str):
             f for f in get_mp3_files(folder, recursive=True)
             if os.path.isfile(f) and f.lower().endswith(".mp3")
         ]
-        print(f"🎵 Found {len(mp3_files)} MP3 files. Use [p] to pause/resume or [q] to quit.")
+        tqdm.write(f"🎵 Found {len(mp3_files)} MP3 files. Use [p] to pause/resume or [q] to quit.")
+        yield 0, len(mp3_files), f"🎵 Found {len(mp3_files)} MP3 files."
 
     with tqdm(total=len(mp3_files), desc="Searching and tagging...", unit="file", dynamic_ncols=True, colour="cyan") as pbar:
 
         for file in mp3_files:
+
             if should_quit:
                 break
             while paused:
@@ -197,12 +200,15 @@ def genius_tagger(folder: str):
             if (is_in_manual_review(file) or is_in_manual_review(file, SKIPPED_FILE)) and not manual_only:
                 pbar.colour = "white"
                 pbar.update(1)
+                message = "Skipping... not found"
+                yield (1, len(mp3_files), message)
                 continue
             if has_lyrics(file):
                 stats["haslyrics"] += 1
                 pbar.colour = "blue"
                 pbar.update(1)
-              #  tqdm.write(f"🎵 Skipping {file}, already has lyrics.")
+                message = "Skipping... has lyrics"
+                yield (1, len(mp3_files), message)
                 continue
             else:
                 title, artist, album, year = get_metadata_tags(file)
@@ -219,9 +225,9 @@ def genius_tagger(folder: str):
                 else:
                     pbar.colour = "red"
                     tqdm.write(f"⛔ There's something wrong with the tags in {base}")
-               # print(alt_query)
+               # tqdm.write(alt_query)
                 if alt_query != base:
-                    # print("🔁", end = "")
+                    # tqdm.write("🔁", end = "")
                     results = search_genius(alt_query)
                     decision, data = choose_song(results, alt_query)
 
@@ -255,19 +261,20 @@ def genius_tagger(folder: str):
 
            # Update progress bar and live stats
             pbar.update(1)
+            message = f"Processing files |✅ {stats['auto']:03d}|🚺 {stats['manual']:03d}|⏭️ {stats['skip']:03d}|🌅 {stats['haslyrics']:03d}|"
             pbar.set_description(
-                f"Processing files |✅ {stats['auto']}|🚺 {stats['manual']}|⏭️ {stats['skip']}|🌅 {stats['haslyrics']}|"
+                message
             )
-
+            yield (1, len(mp3_files), message)
     # After loop: prompt user for pending/manual ones
     if pending:
-        print("\n=== Manual review for ambiguous matches ===")
+        tqdm.write("\n=== Manual review for ambiguous matches ===")
     for file, base, scored in pending:
         if not has_lyrics(file):
             base = flip_query(base)
             tqdm.write(f"\n🔍 Manual review needed for: {base}")
             for idx, (score, song) in enumerate(scored, 1):
-                print(f"🎧 {idx}. {song.get('title')} - {song.get('primary_artist',{}).get('name')} ({score:.1f}%)")
+                tqdm.write(f"🎧 {idx}. {song.get('title')} - {song.get('primary_artist',{}).get('name')} ({score:.1f}%)")
 
             choice = input(f"Select a match [1–{len(scored)}], 0 for Instrumental or press Enter to skip: ").strip()
             if choice == "0":
@@ -278,16 +285,19 @@ def genius_tagger(folder: str):
                 if lyrics:
                     tag_with_lyrics(file, lyrics)
             else:
-                print(f"⏭️ Skipped {base}")
+                tqdm.write(f"⏭️ Skipped {base}")
 
     # ✅ Final summary
-    print("\n🏁 Tagging complete!")
-    print(f"   ✅ Tagged: {stats['auto']}")
-    print(f"   🚺 Manual review needed: {stats['manual']}")
-    print(f"   ⏭️ Not found: {stats['skip']}")
-    print(f"   🌅 Already has lyrics: {stats['haslyrics']}")
+    summary_msg = (f"🏁 Tagging complete!\n"
+                   f"   ✅ Tagged: {stats['auto']}\n"
+                   f"   🚺 Manual review needed: {stats['manual']}\n"
+                   f"   ⏭️ Not found: {stats['skip']}\n"
+                   f"   🌅 Already has lyrics: {stats['haslyrics']}\n\n"
+                   )
+    tqdm.write(summary_msg)
+    yield 0, len(mp3_files), summary_msg
     if stats['manual']:
-        print(f"\n💾 Manual review list saved to: {os.path.abspath(MANUAL_FILE)}")
+        tqdm.write(f"\n💾 Manual review list saved to: {os.path.abspath(MANUAL_FILE)}")
 
 def main():
     if platform.system() == "Windows":
@@ -301,8 +311,8 @@ def main():
 
     if not args.path:
         args.path = input("📂 Enter folder path or manual_review.txt: ").strip()
-
-    genius_tagger(args.path)
+    for step, total, message in genius_tagger(args.path):
+        print(f"{step}/{total} {message}")
 
 
 if __name__ == "__main__":

@@ -2,23 +2,99 @@
 <html>
 <head>
     <title>Genius Tagger</title>
+    <style>
+        /* Simple styling for the bar */
+        #progress-container {
+            width: 100%;
+            background: #eee;
+            border: 1px solid #ccc;
+            height: 30px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+        #bar {
+            width: 0%;
+            background: green;
+            height: 100%;
+            transition: width 0.2s; /* Smooth animation */
+        }
+    </style>
 </head>
 <body>
     <h1>Genius Tagger</h1>
 
-    <form method="post">
-
+    <!-- Note: removed method="post" and action since JS handles it -->
+    <form id="taggerForm">
         <label>Enter folder path (relative to /data):</label><br>
-        <input type="text" name="folder" value="{{ selected_folder or '' }}" style="width: 400px;">
+        <input type="text" name="folder" id="folder" value="{{ selected_folder or '' }}" style="width: 400px;">
         <br><br>
 
-        <button type="submit">Run it!</button>
+        <!-- IMPORTANT: type="button" prevents page reload -->
+        <button type="button" onclick="startTask()">Run it!</button>
     </form>
 
-    {% if logs %}
-        <h2>Logs:</h2>
-        <pre>{{ logs }}</pre>
-    {% endif %}
+    <div id="progress-container">
+        <div id="bar"></div>
+    </div>
+    <p id="percent"></p>
+    <div id="status-msg"></div>
+
+    <!-- NEW: Log container -->
+<h3>Live Logs:</h3>
+<div id="log-container" style="
+    width: 100%;
+    height: 200px;
+    border: 1px solid #333;
+    background: #f9f9f9;
+    overflow-y: scroll;
+    padding: 10px;
+    font-family: monospace;">
+</div>
+
+<script>
+function startTask() {
+    const userParam = document.getElementById("folder").value;
+    const logContainer = document.getElementById("log-container");
+
+    // Clear previous logs
+    logContainer.innerHTML = "";
+    document.getElementById("progress-container").style.display = "block";
+
+    const evtSource = new EventSource(`/progress_stream?param=${encodeURIComponent(userParam)}`);
+
+    evtSource.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            // Update UI
+            document.getElementById("bar").style.width = data.percent + "%";
+            document.getElementById("percent").innerText = data.percent + "%";
+
+            // Log message (if not empty)
+            if (data.message) {
+                const newLog = document.createElement("div");
+                const paddedPercent = String(data.percent).padStart(3, '0');
+
+                newLog.innerText = `[${paddedPercent}%] ${data.message}`;
+                document.getElementById("log-container").appendChild(newLog);
+                // Auto-scroll
+                document.getElementById("log-container").scrollTop = document.getElementById("log-container").scrollHeight;
+            }
+
+            // ONLY Close when the backend says "complete": true
+            if (data.complete === true) {
+                evtSource.close();
+                document.getElementById("bar").style.background = "blue";
+            }
+        };
+
+    evtSource.onerror = function(e) {
+        console.error("Error", e);
+        evtSource.close();
+    };
+}
+</script>
 </body>
 </html>
+
+
 
