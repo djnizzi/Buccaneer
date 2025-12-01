@@ -1,6 +1,7 @@
 __pycache__/
 .idea/
 downloads/
+logs/
 secrets.ini
 manual_review.txt
 skipped_review.txt
@@ -10,3 +11,4 @@ all_cues.txt
 empty_mp3s.txt
 check_that_dir.txt
 processed_log.txt
+downloaded_ids.txt

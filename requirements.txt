@@ -11,3 +11,5 @@ librosa==0.11.0
 yaspin==3.3.0
 flask==3.1.2
 chardet==5.2.0
+bs4==0.0.2
+fake_headers==1.0.2

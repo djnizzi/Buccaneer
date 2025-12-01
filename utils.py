@@ -222,3 +222,42 @@ def get_mp3_files(folder: str, recursive: bool = False):
     if recursive:
         return glob.glob(os.path.join(folder, "**", "*.mp3"), recursive=True)
     return glob.glob(os.path.join(folder, "*.mp3"))
+
+
+import re
+
+
+def strip_video_tags(text):
+
+    if not text:
+        return text
+    
+    # Define patterns to remove (case-insensitive)
+    # Using word boundaries and optional spaces for flexibility
+    patterns = [
+        r'[\(\[]?\s*Official\s+Music\s+Video\s*[\)\]]?',
+        r'[\(\[]?\s*Official\s+Lyric\s+Video\s*[\)\]]?',
+        r'[\(\[]?\s*Official\s+HD\s+Video\s*[\)\]]?',
+        r'[\(\[]?\s*Official\s+Video\s*[\)\]]?',
+        r'[\(\[]?\s*Official\s+Audio\s*[\)\]]?',
+        r'[\(\[]?\s*Official\s+Visualizer\s*[\)\]]?',
+        r'[\(\[]?\s*Video\s+Oficial\s*[\)\]]?',
+        r'[\(\[]?\s*Music\s+Video\s*[\)\]]?',
+        r'[\(\[]?\s*Lyric\s+Video\s*[\)\]]?',
+        r'[\(\[]?\s*Visualizer\s*[\)\]]?',
+        r'[\(\[]?\s*Video\s*[\)\]]?',
+        r'[\(\[]?\s*Audio\s*[\)\]]?',
+    ]
+    
+    result = text
+    
+    # Apply each pattern
+    for pattern in patterns:
+        result = re.sub(pattern, '', result, flags=re.IGNORECASE)
+    
+    # Strip leading and trailing whitespace
+    result = result.strip()
+    
+    return result
+
+
