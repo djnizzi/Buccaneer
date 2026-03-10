@@ -1,5 +1,5 @@
 import os
-from mutagen.id3 import ID3, APIC, TOAL, TSRC, TALB, TPE1, TPE2, TIT2, TCON, TDRC, TPUB, TDOR, COMM, TCOM, USLT, ID3NoHeaderError
+from mutagen.id3 import ID3, APIC, TOAL, TSRC, TALB, TPE1, TPE2, TIT2, TCON, TDRC, TPUB, TDOR, COMM, TCOM, USLT, TRCK, ID3NoHeaderError
 import requests
 from tqdm import tqdm
 from utils import normalize_yt_title, merge_feat, fetch_and_crop_cover, clean_discogs_artist
@@ -69,20 +69,34 @@ def get_metadata_tags(filepath: str):
 
 
 # --- tag from YT ---
-def tag_from_yt(filepath: str, url: str):
+def tag_from_yt(filepath: str, url: str, album: str = None, album_artist: str = None, track_num: int = None):
     info = get_yt_metadata(url)
     id3 = ID3(filepath)
 
     artist, song = normalize_yt_title(info)
     upload_date = info.get("upload_date")  # YYYY-MM-DD
 
-    album_artist = merge_feat(artist)
-
     # Title + Artist
     id3.add(TIT2(encoding=3, text=song))
     id3.add(TPE1(encoding=3, text=artist))
-    id3.add(TPE2(encoding=3, text=album_artist))
-    id3.add(TALB(encoding=3, text=f"{song} [Single]"))
+    
+    # Album Artist logic
+    if album_artist:
+        final_album_artist = album_artist
+    else:
+        final_album_artist = merge_feat(artist)
+    id3.add(TPE2(encoding=3, text=final_album_artist))
+
+    # Album logic
+    if album:
+        final_album = album
+    else:
+        final_album = f"{song} [Single]"
+    id3.add(TALB(encoding=3, text=final_album))
+
+    # Track Number
+    if track_num is not None:
+        id3.add(TRCK(encoding=3, text=str(track_num)))
 
     # Release date (TDOR) & year (TDRC)
     if upload_date:

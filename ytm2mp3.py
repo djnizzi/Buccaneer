@@ -26,7 +26,7 @@ def make_progress_hook():
     return hook
 
 # --- Download Playlist ---
-def download_playlist(playlist_url: str, discogs_tagging: bool) -> list:
+def download_playlist(playlist_url: str, discogs_tagging: bool, album_title: str = None, album_artist: str = None) -> list:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     results = []
     i = 0
@@ -39,7 +39,7 @@ def download_playlist(playlist_url: str, discogs_tagging: bool) -> list:
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
-            "preferredquality": "128"
+            "preferredquality": "160"
         }],
         "ffmpeg_location": FFMPEG_PATH,
         "ignoreerrors": True,
@@ -54,7 +54,7 @@ def download_playlist(playlist_url: str, discogs_tagging: bool) -> list:
             entries = info.get("entries", [])
             spinner.ok("✅ ")
 
-            for entry in tqdm(entries, desc="Downloading videos", unit="video"):
+            for index, entry in enumerate(tqdm(entries, desc="Downloading videos", unit="video")):
                 if not entry:
                     print("⚠️ Skipping unavailable video (entry is None)")
                     continue
@@ -80,7 +80,8 @@ def download_playlist(playlist_url: str, discogs_tagging: bool) -> list:
                 safe_title = safe_filename(f"{artist} - {song}")
                 safe_title = clean_title(safe_title)
                 final_path = os.path.join(OUTPUT_DIR, f"{safe_title}.mp3")
-
+                if os.path.exists(final_path):
+                    final_path = os.path.join(OUTPUT_DIR, f"{safe_title}{entry['id']}.mp3")
                 # temp file path from yt-dlp
                 temp_path = os.path.join(OUTPUT_DIR, f"{entry['id']}.mp3")
 
@@ -90,7 +91,7 @@ def download_playlist(playlist_url: str, discogs_tagging: bool) -> list:
                         print(f"✅ Saved {safe_title}.mp3")
 
                         # Tag with YouTube metadata
-                        tag_from_yt(final_path, entry["webpage_url"])
+                        tag_from_yt(final_path, entry["webpage_url"], album=album_title, album_artist=album_artist, track_num=index + 1)
                         results.append({"title": safe_title, "file": final_path})
                     except Exception as e:
                         print(f"⚠️ Failed to process {entry.get('title')}: {e}")
@@ -116,7 +117,14 @@ def main():
         print("⚠️ No URL entered, exiting.")
         return
 
-    results = download_playlist(playlist_url, discogs_tagging)
+    is_album = input("💿 Is this an album? (y|N): ").strip().lower() == "y"
+    album_title = None
+    album_artist = None
+    if is_album:
+        album_artist = input("👤 Enter Album Artist: ").strip()
+        album_title = input("💿 Enter Album Title: ").strip()
+
+    results = download_playlist(playlist_url, discogs_tagging, album_title, album_artist)
 
     if results:
         print("\n✅ Finished processing playlist:")

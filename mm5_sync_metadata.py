@@ -119,9 +119,35 @@ def sync_metadata(dry_run=False):
 
         matches_found = 0
         misses = []
+        
+        # Load processed IDs
+        processed_ids = set()
+        processed_log_path = "mm5_sync_processed.txt"
+        if os.path.exists(processed_log_path):
+            with open(processed_log_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        processed_ids.add(int(line.strip()))
+                    except ValueError:
+                        pass
+        print(f"Loaded {len(processed_ids)} processed IDs.")
+
+        # Drop triggers to avoid 'unknown tokenizer: mm' error
+        triggers_to_restore = []
+        if not dry_run:
+            print("Temporarily dropping triggers on Songs table...")
+            cursor.execute("SELECT name, sql FROM sqlite_master WHERE type='trigger' AND tbl_name='Songs'")
+            triggers = cursor.fetchall()
+            for trigger in triggers:
+                triggers_to_restore.append((trigger['name'], trigger['sql']))
+                cursor.execute(f"DROP TRIGGER {trigger['name']}")
+            print(f"Dropped {len(triggers_to_restore)} triggers.")
 
         # 4. Iterate and Match
         for video in music_videos:
+            if video['ID'] in processed_ids:
+                continue
+
             # Filter out videos from 2022 onwards
             video_year = video['Year']
             if video_year:
@@ -156,35 +182,33 @@ def sync_metadata(dry_run=False):
 
             if not confirmed_matches:
                 misses.append(f"{video_title} ({video_artist_str})")
+                
+                # Log processed ID even if no match found (to avoid re-processing)
+                if not dry_run:
+                    with open(processed_log_path, "a", encoding="utf-8") as f:
+                        f.write(f"{video['ID']}\n")
                 continue
 
             selected_match = None
             if len(confirmed_matches) == 1:
                 selected_match = confirmed_matches[0]
             else:
-                # Multiple matches
-                # Check if all matches have the same year
-                years = {m['Year'] for m in confirmed_matches}
-                if len(years) == 1:
-                    # Auto-select the first one
-                    selected_match = confirmed_matches[0]
-                    # print(f"Auto-selected match for '{video_title}' (Identical Year: {list(years)[0]})")
-                else:
-                    print(f"\nMultiple matches found for Video: {video_title} - {video_artist_str}")
-                    for idx, match in enumerate(confirmed_matches):
-                        print(f"  [{idx+1}] {match['SongTitle']} - {match['AlbumArtist']} (Year: {match['Year']}, Genre: {match['Genre']})")
-                    
-                    while True:
-                        choice = input("Select a match (number) or 's' to skip: ").strip().lower()
-                        if choice == 's':
-                            break
-                        try:
-                            idx = int(choice) - 1
-                            if 0 <= idx < len(confirmed_matches):
-                                selected_match = confirmed_matches[idx]
-                                break
-                        except ValueError:
-                            pass
+                # Multiple matches - Auto-select oldest year
+                # Sort by Year ascending. Treat 0 or None as very large number to put them at end.
+                def get_year_sort_key(match):
+                    y = match['Year']
+                    if not y or y == 0:
+                        return 99999999 # Push to end
+                    return y
+                
+                confirmed_matches.sort(key=get_year_sort_key)
+                
+                selected_match = confirmed_matches[0]
+                
+                # Log the decision
+                print(f"Multiple matches for '{video_title}': Auto-selected oldest year ({selected_match['Year']}) from {len(confirmed_matches)} matches.")
+                # for m in confirmed_matches:
+                #     print(f"  - {m['SongTitle']} ({m['Year']})")
             
             if selected_match:
                 # Update Video
@@ -201,8 +225,19 @@ def sync_metadata(dry_run=False):
                         WHERE ID = ?
                     """, (new_year, new_genre, new_publisher, video['ID']))
                     matches_found += 1
+            
+            # Log processed ID
+            if not dry_run:
+                with open(processed_log_path, "a", encoding="utf-8") as f:
+                    f.write(f"{video['ID']}\n")
 
         if not dry_run:
+            # Restore triggers
+            print("Restoring triggers...")
+            for name, sql in triggers_to_restore:
+                cursor.execute(sql)
+            print(f"Restored {len(triggers_to_restore)} triggers.")
+            
             conn.commit()
             print("\nChanges committed to database.")
         
@@ -219,6 +254,14 @@ def sync_metadata(dry_run=False):
         print(f"An error occurred: {e}")
         if not dry_run and 'conn' in locals():
             conn.rollback()
+            print("Rolled back changes.")
+            # Since we rolled back, triggers dropped in the transaction should be restored automatically by SQLite.
+            # But if we dropped them *before* a transaction started (if autocommit is on? No, python sqlite3 starts transaction automatically)
+            # Python sqlite3 starts a transaction on the first DML/DDL statement usually.
+            # So rollback should restore triggers.
+
+
+
     finally:
         if 'conn' in locals():
             conn.close()
