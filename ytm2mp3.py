@@ -65,9 +65,24 @@ def download_playlist(playlist_url: str, discogs_tagging: bool, album_title: str
 
             # Filter entries based on track_indices if provided
             if track_indices is not None:
-                entries = [entries[i] for i in track_indices if i < len(entries)]
+                entries = [(track_indices[i], entries[track_indices[i]]) for i in range(len(track_indices)) if track_indices[i] < len(entries)]
 
-            for index, entry in enumerate(tqdm(entries, desc="Downloading videos", unit="video")):
+            # One Discogs search for the whole album if album mode + discogs tagging
+            album_release = None
+            if discogs_tagging and album_title and album_artist:
+                album_search_title = f"{album_artist} - {album_title}"
+                album_release = search_discogs_with_prompt(album_search_title)
+                if not album_release:
+                    print("No release selected. Skipping Discogs tagging for this album.")
+
+            for entry_index, entry_data in enumerate(tqdm(entries, desc="Downloading videos", unit="video")):
+                # entry_data is (original_playlist_index, entry_object) when track_indices was provided, else just entry_object
+                if isinstance(entry_data, tuple):
+                    original_idx, entry = entry_data
+                else:
+                    original_idx = entry_index
+                    entry = entry_data
+
                 if not entry:
                     print("⚠️ Skipping unavailable video (entry is None)")
                     continue
@@ -89,9 +104,9 @@ def download_playlist(playlist_url: str, discogs_tagging: bool, album_title: str
 
                 artist = clean_feat(artist)
 
-                # build final polished filename
+                # build final polished filename using original playlist index
                 if album_title and album_artist:
-                    filename = f"{index + 1:02d} - {song}"
+                    filename = f"{original_idx + 1:02d} - {song}"
                 else:
                     filename = f"{artist} - {song}"
 
@@ -110,16 +125,12 @@ def download_playlist(playlist_url: str, discogs_tagging: bool, album_title: str
                         print(f"✅ Saved: {final_path}")
 
                         # Tag with YouTube metadata
-                        tag_from_yt(final_path, entry["webpage_url"], album=album_title, album_artist=album_artist, track_num=index + 1)
+                        tag_from_yt(final_path, entry["webpage_url"], album=album_title, album_artist=album_artist, track_num=original_idx + 1)
                         results.append({"title": safe_title, "file": final_path})
                     except Exception as e:
                         print(f"⚠️ Failed to process {entry.get('title')}: {e}")
-                    if discogs_tagging:
-                        release = search_discogs_with_prompt(safe_title)
-                        if release:
-                            tag_mp3_with_discogs(final_path, release)
-                        else:
-                            print("No release selected. Skipping Discogs tagging.")
+                    if discogs_tagging and album_release:
+                        tag_mp3_with_discogs(final_path, album_release)
                 else:
                     print(f"⚠️ File not found after download: {entry.get('title')}")
 

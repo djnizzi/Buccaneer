@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".minimax", ".minimax", "{D2DE2851-07B7-AE04-EEAB-9861324305B7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "skills", "skills", "{2C92A4B1-5B46-AFC2-A4D3-58D55AF49C86}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "minimax-docx", "minimax-docx", "{0A0A7085-6650-8519-D9C1-1B3B70EE7226}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{C072D221-0C15-DA26-27B3-DEBD2E3A3114}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnet", "dotnet", "{92C86C5D-1BC0-CF84-961F-BDF9E7AC2372}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniMaxAIDocx.Cli", ".minimax\skills\minimax-docx\scripts\dotnet\MiniMaxAIDocx.Cli\MiniMaxAIDocx.Cli.csproj", "{53BC2F95-45FF-160C-FCF0-FC4255624C4A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniMaxAIDocx.Core", ".minimax\skills\minimax-docx\scripts\dotnet\MiniMaxAIDocx.Core\MiniMaxAIDocx.Core.csproj", "{67373735-871E-64AF-21C3-077B96C6E264}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53BC2F95-45FF-160C-FCF0-FC4255624C4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53BC2F95-45FF-160C-FCF0-FC4255624C4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53BC2F95-45FF-160C-FCF0-FC4255624C4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53BC2F95-45FF-160C-FCF0-FC4255624C4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67373735-871E-64AF-21C3-077B96C6E264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67373735-871E-64AF-21C3-077B96C6E264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67373735-871E-64AF-21C3-077B96C6E264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67373735-871E-64AF-21C3-077B96C6E264}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2C92A4B1-5B46-AFC2-A4D3-58D55AF49C86} = {D2DE2851-07B7-AE04-EEAB-9861324305B7}
+		{0A0A7085-6650-8519-D9C1-1B3B70EE7226} = {2C92A4B1-5B46-AFC2-A4D3-58D55AF49C86}
+		{C072D221-0C15-DA26-27B3-DEBD2E3A3114} = {0A0A7085-6650-8519-D9C1-1B3B70EE7226}
+		{92C86C5D-1BC0-CF84-961F-BDF9E7AC2372} = {C072D221-0C15-DA26-27B3-DEBD2E3A3114}
+		{53BC2F95-45FF-160C-FCF0-FC4255624C4A} = {92C86C5D-1BC0-CF84-961F-BDF9E7AC2372}
+		{67373735-871E-64AF-21C3-077B96C6E264} = {92C86C5D-1BC0-CF84-961F-BDF9E7AC2372}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {764D4402-2AAA-48CF-A63A-2A5E4CAD8D69}
+	EndGlobalSection
+EndGlobal

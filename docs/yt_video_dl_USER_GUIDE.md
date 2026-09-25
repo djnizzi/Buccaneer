@@ -21,7 +21,7 @@ python yt_video_dl.py "https://www.youtube.com/playlist?list=..."
 - **High Quality**: Always attempts to download the best available video and audio streams and merges them into an MP4 container.
 - **Smart Naming**: Automatically removes video-specific metadata from filenames (e.g., "[Official Video]", "4K", "(Lyric Video)").
 - **Download Archive**: Remembers previously downloaded videos using `downloaded_ids.txt`. It will skip any video that has already been successfuly downloaded in a previous session.
-- **Automatic Thumbnails**: Downloads the video thumbnail and embeds/saves it along with the video.
+- **Automatic Thumbnails**: Downloads the video thumbnail and embeds/saves it along with the video. Use tag_videos.py to merge thumbnails and videos
 
 ## Output & Logs
 
